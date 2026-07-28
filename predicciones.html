@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Predicciones Meteorológicas</title>
@@ -53,6 +54,7 @@
         <button id="prev-time-btn">‹ Hora Anterior</button>
         <span id="forecast-hour-label">Pronóstico: +0h</span>
         <button id="next-time-btn">Hora Siguiente ›</button>
+        <button id="openMeteogramBtn" style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer;">¡Abre el meteograma!</button>
       </div>
 
     <div id="images-display-container" class="images-container"></div>
@@ -61,6 +63,35 @@
   <footer class="main-footer">
     <p>Datos de <a href="https://www.meteociel.fr/index.php?region=sp" target="_blank" rel="noopener">Meteociel.fr</a></p>
   </footer>
+
+  <div id="meteogramModal" class="meteogram-modal hidden">
+  <div class="meteogram-modal-content">
+    <div class="meteogram-header">
+      <div class="meteogram-controls">
+        <button id="useLocationBtn" title="Usar mi ubicación actual">Usar ubicación actual</button>
+        <input type="text" id="citySearchInput" placeholder="Escribe ciudad o Lat,Lon" />
+        <button id="fetchMeteogramBtn">← Buscar ubicación / Refrescar modelo →</button>
+        <select id="meteogramModelSelect">
+          <option value="ecmwf_ifs&forecast_days=10">ECMWF</option>
+          <option value="dwd_icon_seamless">ICON-EU</option>
+          <option value="meteofrance_seamless&forecast_days=4">ARPEGE-AROME</option>
+          <option value="ncep_gfs_seamless">GFS</option>
+          <option value="ukmo_seamless">UKMO</option>
+        </select>
+      </div>
+      <button id="closeMeteogramBtn" class="close-btn">&times;</button>
+    </div>
+    
+    <div id="meteogramLoading" class="meteogram-loading hidden">Cargando datos...</div>
+
+    <div class="meteogram-scroll-container">
+      <table id="meteogramTable" class="meteogram-table">
+        <thead id="meteogramTableHead"></thead>
+        <tbody id="meteogramTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
   <script src="script_predicciones.js"></script>
 </body>
