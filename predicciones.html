@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predicciones Meteorológicas</title>
+  <link rel="stylesheet" href="styles_predicciones.css">
+</head>
+<body>
+  <nav class="main-nav">
+    <a href="index.html" class="nav-btn">Observaciones</a>
+    <a href="predicciones.html" class="nav-btn active">Predicciones</a>
+    <a href="aviation.html" class="nav-btn">Predicciones aeronáuticas</a>
+  </nav>
+
+  <main class="content-container">
+    <div class="control-panel-main">
+      <div class="panel-group">
+        <label>Región:</label>
+        <select id="region-select">
+          <option value="peninsula" selected>Península Ibérica</option>
+          <option value="europa">Europa</option>
+        </select>
+      </div>
+
+      <div class="panel-group">
+        <label>Modelos a comparar:</label>
+        <div id="models-container" class="checkbox-group"></div>
+      </div>
+
+      <div class="panel-group">
+        <label>Producto / Variable:</label>
+        <select id="product-select">
+          <option value="precip">Precipitaciones</option>
+          <option value="t2m">Temperatura 2m</option>
+          <option value="t850">Temperatura 850hPa</option>
+          <option value="t500">Temperatura 500hPa</option>
+          <option value="wind10m">Viento medio 10m</option>
+          <option value="gust10m">Rachas 10m</option>
+          <option value="wind700_850">Viento 700-850hPa</option>
+          <option id="opt-wind900" value="wind900">Viento 900hPa</option>
+          <option id="opt-jetstream" value="jetstream" style="display: none;">JetStream 300hPa</option>
+          <option value="geop500">Geopotencial 500hPa</option>
+          <option value="cape">CAPE</option>
+        </select>
+      </div>
+      <div class="panel-group">
+        <label></label>
+        <button id="preload-btn" type="button">Precargar imágenes</button>
+      </div>
+    </div>
+    <div class="panel-group time-nav">
+        <button id="prev-time-btn">‹ Hora Anterior</button>
+        <span id="forecast-hour-label">Pronóstico: +0h</span>
+        <button id="next-time-btn">Hora Siguiente ›</button>
+      </div>
+
+    <div id="images-display-container" class="images-container"></div>
+  </main>
+
+  <footer class="main-footer">
+    <p>Datos de <a href="https://www.meteociel.fr/index.php?region=sp" target="_blank" rel="noopener">Meteociel.fr</a></p>
+  </footer>
+
+  <script src="script_predicciones.js"></script>
+</body>
+</html>

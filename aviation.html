@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predicciones Aeronáuticas (TAF)</title>
+  <link rel="stylesheet" href="styles_aviation.css">
+</head>
+<body>
+  <nav class="main-nav">
+    <a href="index.html" class="nav-btn">Observaciones</a>
+    <a href="predicciones.html" class="nav-btn">Predicciones</a>
+    <a href="aviation.html" class="nav-btn active">Predicciones aeronáuticas</a>
+  </nav>
+  <main class="content-container">
+    <section class="obs-section">
+      <div class="search-box">
+        <input type="text" id="taf-input" placeholder="Código ICAO">
+        <button id="taf-btn">Consultar TAF</button>
+      </div>
+      <div id="taf-display" class="taf-container"></div>
+    </section>
+    <section>
+      <div class="model-title">Carta SIGWX:</div>
+      <label for="vedurRun" class="vedurRun">Selecciona hora de la predicción:</label>
+      <select id="vedurRun" class="vedurRun">
+        <option value="0000">00:00 UTC</option>
+        <option value="0600">06:00 UTC</option>
+        <option value="1200">12:00 UTC</option>
+        <option value="1800">18:00 UTC</option>
+      </select>
+      <br>
+      <img id="vedurImage" src="https://www.vedur.is/photos/flugkort/PGDE14_EGRR_0000.png">
+      <br>
+      <h3 style="text-align: center;">Leyenda:</h3>
+      <img class="simbolos-image" src="simbolos.png">
+      <br>
+      <p style="text-align: center;">Jet Stream: Triangulo = 50 kts + Linea larga = 10 kts + Linea corta = 5 kts</p>
+      <p style="text-align: center;">Abreviaturas: ISOL = Isolated (CB aislados) | OCNL = Occasional (CB ocasionales) | FRQ = Frequent (frecuentes) | EMBD = Embedded (CB dentro de otras nubes)</p>
+    </section>
+  </main>
+  <footer class="main-footer">
+    <p>Datos de <a href="https://aviationweather.gov/" target="_blank" rel="noopener">Aviation Weather</a></p>
+  </footer>
+  <script src="script_aviation.js"></script>
+</body>
+</html>

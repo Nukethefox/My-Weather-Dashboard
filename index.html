@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Observaciones Meteorológicas</title>
+  <link rel="stylesheet" href="styles_index.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <nav class="main-nav">
+    <a href="index.html" class="nav-btn active">Observaciones</a>
+    <a href="predicciones.html" class="nav-btn">Predicciones</a>
+    <a href="aviation.html" class="nav-btn">Predicciones aeronáuticas</a>
+  </nav>
+  <main class="content-container-2">
+    <section class="obs-section">
+      <div class="control-panel">
+        <label for="obs-select">Selecciona datos a visualizar:</label>
+        <select id="obs-select">
+          <option value="https://www.meteociel.fr/cartes_obs/temp2_sp_1h.png">Observaciones generales</option>
+          <option value="https://www.meteociel.fr/cartes_obs/temp_sp.png">Temperatura</option>
+          <option value="https://www.meteociel.fr/cartes_obs/tn_sp.png">Temp. mínima</option>
+          <option value="https://www.meteociel.fr/cartes_obs/txint_sp.png">Temp. máxima</option>
+          <option value="https://www.meteociel.fr/cartes_obs/pointrosee_sp.png">Punto de rocío</option>
+          <option value="https://www.meteociel.fr/cartes_obs/humi_sp.png">Humedad</option>
+          <option value="https://www.meteociel.fr/cartes_obs/humidex_sp.png">Humidex</option>
+          <option value="https://www.meteociel.fr/cartes_obs/windchill_sp.png">Windchill</option>
+          <option value="https://www.meteociel.fr/cartes_obs/vent_sp.png">Viento medio</option>
+          <option value="https://www.meteociel.fr/cartes_obs/rafales_sp.png">Velocidad ráfagas de viento</option>
+          <option value="https://www.meteociel.fr/cartes_obs/pression2_sp.png">Presión a nivel del mar</option>
+          <option value="sst">Temperatura del mar</option>
+        </select>
+      </div>
+      <p style="color: #b0b0b0;">Datos reales recogidos por estaciones meteorológicas</p>
+      <div class="image-wrapper">
+        <img id="obs-image" src="https://www.meteociel.fr/cartes_obs/temp2_sp_1h.png" alt="Mapa de observación meteorológica">
+      </div>
+    </section>
+    <section class="obs-section">
+      <div class="search-box">
+        <input type="text" id="metar-input" placeholder="Código ICAO">
+        <button id="metar-btn">Consultar METAR</button>
+      </div>
+      <div id="metar-display" class="metar-grid"></div>
+    </section>
+  </main>
+  <main class="content-container">
+    <section class="obs-section">
+      <div class="sat-controls">
+        <select id="sat-region">
+          <option value="sp" selected>España</option>
+          <option value="eu">Europa</option>
+          <option value="alt">Atlántico</option>
+        </select>
+        <select id="sat-mode">
+          <option value="latest" selected>Imagen Fija</option>
+          <option value="anim">Animación</option>
+        </select>
+        <select id="sat-type">
+          <option value="ir">Blanco y Negro</option>
+          <option value="ircol">Colorizada</option>
+          <option value="viscol">Visible</option>
+          <option value="vistruecol">Truecolor</option>
+          <option value="sandvisir">Sandwich</option>
+        </select>
+      </div>
+      <div class="sat-image-wrapper">
+        <img id="sat-image" src="" alt="Imagen de satélite Meteociel">
+      </div>
+    </section>
+  </main>
+  <section class="content-container">
+  <section class="obs-section">
+    <div class="radar-container">
+      <div class="radar-controls">
+        <span class="radar-title">Radar de precipitación</span>
+        <span id="radar-timestamp">Cargando...</span>
+        <div class="radar-buttons">
+          <button id="radar-prev-btn">‹</button>
+          <button id="radar-play-btn">▶</button>
+          <button id="radar-next-btn">›</button>
+        </div>
+        <label class="clouds-toggle">
+          <input type="checkbox" id="clouds-checkbox">
+          <span>Nubes (NASA)</span>
+        </label>
+      </div>
+      <div id="radar-map"></div>
+    </div>
+  </section>
+</section>
+<section class="content-container-2">
+  <section class="obs-section">
+    <iframe style="border-radius: 8px; height: calc(100vh - 200px);" width="100%" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=5&overlay=radar&product=radar&level=surface&lat=41.443&lon=-2.417" frameborder="0"></iframe>
+  </section>
+  <section class="obs-section">
+    <iframe style="border-radius: 8px; height: calc(100vh - 200px);" width="100%" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=5&overlay=satellite&product=satellite&level=surface&lat=41.443&lon=-2.417" frameborder="0"></iframe>
+  </section>
+</section>
+  <footer class="main-footer">
+    <p>Datos de <a href="https://www.meteociel.fr/index.php?region=sp" target="_blank" rel="noopener">Meteociel</a>, <a href="https://embed.windy.com/config/map" target="_blank" rel="noopener">Windy</a>, <a href="https://aviationweather.gov/" target="_blank" rel="noopener">Aviation Weather</a>, <a href="https://www.rainviewer.com/api/weather-maps-api.html" target="_blank" rel="noopener">RainViewer</a> y <a href="https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api" target="_blank" rel="noopener">NASA GIBS</a></p>
+  </footer>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script_index.js"></script>
+</body>
+</html>
