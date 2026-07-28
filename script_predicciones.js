@@ -348,4 +348,227 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   renderModelCheckboxes();
+
+  let meteogramChartInstance = null;
+
+const wmoIconMap = {
+  0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+  45: '🌫️', 48: '🌫️',
+  51: '🌧️', 53: '🌧️', 55: '🌧️',
+  61: '🌧️', 63: '🌧️', 65: '🌧️',
+  71: '❄️', 73: '❄️', 75: '❄️',
+  80: '🌦️', 81: '🌦️', 82: '🌧️',
+  95: '⛈️', 96: '⛈️', 99: '⛈️'
+};
+
+document.getElementById('openMeteogramBtn').addEventListener('click', () => {
+  document.getElementById('meteogramModal').classList.remove('hidden');
+});
+
+document.getElementById('closeMeteogramBtn').addEventListener('click', () => {
+  document.getElementById('meteogramModal').classList.add('hidden');
+});
+
+async function fetchMeteogramForCoords(latitude, longitude, locationName = '') {
+  const modelParam = document.getElementById('meteogramModelSelect').value;
+  const loadingEl = document.getElementById('meteogramLoading');
+  loadingEl.classList.remove('hidden');
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,dew_point_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_850hPa,cloud_cover,weather_code&models=${modelParam}&cell_selection=nearest&timezone=auto`;
+
+    const weatherRes = await fetch(url);
+    const weatherData = await weatherRes.json();
+    weatherData.locationName = locationName;
+
+    renderMeteogram(weatherData);
+  } catch (err) {
+    alert('Error al obtener datos de predicción');
+  } finally {
+    loadingEl.classList.add('hidden');
+  }
+}
+
+document.getElementById('fetchMeteogramBtn').addEventListener('click', async () => {
+  const query = document.getElementById('citySearchInput').value.trim();
+  if (!query) return;
+
+  const coordMatch = query.match(/^([-+]?\d+(?:\.\d+)?)\s*,\s*([-+]?\d+(?:\.\d+)?)$/);
+  if (coordMatch) {
+    const lat = parseFloat(coordMatch[1]);
+    const lon = parseFloat(coordMatch[2]);
+    await fetchMeteogramForCoords(lat, lon, `Coordenadas manuales (${lat}, ${lon})`);
+    return;
+  }
+
+  const loadingEl = document.getElementById('meteogramLoading');
+  loadingEl.classList.remove('hidden');
+
+  try {
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=es&format=json`);
+    const geoData = await geoRes.json();
+
+    if (!geoData.results || geoData.results.length === 0) {
+      alert('Población no encontrada');
+      loadingEl.classList.add('hidden');
+      return;
+    }
+
+    const place = geoData.results.find(r => r.country_code === 'ES') || geoData.results[0];
+    const placeName = [place.name, place.admin1, place.country].filter(Boolean).join(', ');
+
+    await fetchMeteogramForCoords(place.latitude, place.longitude, placeName);
+  } catch (err) {
+    alert('Error en la búsqueda geográfica');
+    loadingEl.classList.add('hidden');
+  }
+});
+
+document.getElementById('useLocationBtn').addEventListener('click', () => {
+  if (!navigator.geolocation) {
+    alert('La geolocalización no está soportada por tu navegador.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      document.getElementById('citySearchInput').value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      await fetchMeteogramForCoords(lat, lon, 'Ubicación GPS actual');
+    },
+    () => {
+      alert('No se pudo obtener la ubicación GPS.');
+    }
+  );
+});
+
+function renderMeteogram(data) {
+  const hourly = data.hourly;
+  const daily = data.daily;
+
+  const tHead = document.getElementById('meteogramTableHead');
+  const tBody = document.getElementById('meteogramTableBody');
+  tHead.innerHTML = '';
+  tBody.innerHTML = '';
+
+  const totalCols = hourly.time.length + 1;
+  const lat = data.latitude !== undefined ? data.latitude.toFixed(4) : '--';
+  const lon = data.longitude !== undefined ? data.longitude.toFixed(4) : '--';
+  const ele = data.elevation !== undefined ? `${data.elevation}m` : '--';
+  const tz = data.timezone || 'UTC';
+
+  const locTitle = data.locationName ? ` 🏢 ${data.locationName} |` : '';
+  const metaRow = document.createElement('tr');
+  metaRow.innerHTML = `<td colspan="${totalCols}" style="text-align: left; background-color: #0f172a; color: #38bdf8; font-weight: 600; padding: 8px 12px; border-bottom: 1px solid #334155;">📍${locTitle} Lat ${lat}°, Lon ${lon}° | Altitud: ${ele} | Zona: ${tz}</td>`;
+  tHead.appendChild(metaRow);
+  const dayGroups = [];
+  let currentDayStr = null;
+  let currentGroup = null;
+
+  hourly.time.forEach((tStr, idx) => {
+    const dayStr = tStr.split('T')[0];
+    if (dayStr !== currentDayStr) {
+      currentDayStr = dayStr;
+      currentGroup = { dayStr, count: 0, startIndex: idx };
+      dayGroups.push(currentGroup);
+    }
+    currentGroup.count++;
+  });
+
+  const row1 = document.createElement('tr');
+  row1.innerHTML = `<td class="sticky-col">Día</td>`;
+  dayGroups.forEach((g, idx) => {
+    const d = new Date(g.dayStr);
+    const cell = document.createElement('td');
+    cell.colSpan = g.count;
+    if (idx > 0) cell.className = 'day-border';
+    cell.textContent = `${d.getDate()}/${d.getMonth()+1}`;
+    row1.appendChild(cell);
+  });
+  tHead.appendChild(row1);
+
+  const row2 = document.createElement('tr');
+  row2.innerHTML = `<td class="sticky-col">Temp Min / Max</td>`;
+  dayGroups.forEach((g, idx) => {
+    const dayIdx = daily ? daily.time.indexOf(g.dayStr) : -1;
+    const cell = document.createElement('td');
+    cell.colSpan = g.count;
+    if (idx > 0) cell.className = 'day-border';
+    if (dayIdx !== -1) {
+      cell.textContent = `${daily.temperature_2m_min[dayIdx]}°C / ${daily.temperature_2m_max[dayIdx]}°C`;
+    } else {
+      cell.textContent = '--';
+    }
+    row2.appendChild(cell);
+  });
+  tHead.appendChild(row2);
+
+  const row3 = document.createElement('tr');
+  row3.innerHTML = `<td class="sticky-col">Salida / Puesta del sol</td>`;
+  dayGroups.forEach((g, idx) => {
+    const dayIdx = daily ? daily.time.indexOf(g.dayStr) : -1;
+    const cell = document.createElement('td');
+    cell.colSpan = g.count;
+    if (idx > 0) cell.className = 'day-border';
+    if (dayIdx !== -1 && daily.sunrise[dayIdx] && daily.sunset[dayIdx]) {
+      const sunrise = daily.sunrise[dayIdx].split('T')[1];
+      const sunset = daily.sunset[dayIdx].split('T')[1];
+      cell.textContent = `☀️ ${sunrise} - 🌙 ${sunset}`;
+    } else {
+      cell.textContent = '--';
+    }
+    row3.appendChild(cell);
+  });
+  tHead.appendChild(row3);
+
+  const getWindArrow = (deg) => {
+    const arrows = ['↓', '↙', '←', '↖', '↑', '↗', '→', '↘'];
+    return arrows[Math.round(deg / 45) % 8];
+  };
+
+  const isNightHour = (tStr) => {
+    const dayStr = tStr.split('T')[0];
+    const hour = new Date(tStr).getHours();
+    const dayIdx = daily ? daily.time.indexOf(dayStr) : -1;
+    if (dayIdx !== -1 && daily.sunrise[dayIdx] && daily.sunset[dayIdx]) {
+      const sunriseHour = new Date(daily.sunrise[dayIdx]).getHours();
+      const sunsetHour = new Date(daily.sunset[dayIdx]).getHours();
+      return hour < sunriseHour || hour >= sunsetHour;
+    }
+    return false;
+  };
+
+  const rowsData = [
+    { label: 'Hora', values: hourly.time.map(t => `${String(new Date(t).getHours()).padStart(2, '0')}:00`) },
+    { label: 'General', values: hourly.weather_code.map(code => `<span class="weather-icon">${wmoIconMap[code] || '❓'}</span>`) },
+    { label: 'ºC a 2m', values: hourly.temperature_2m.map(v => `${v}°`) },
+    { label: 'ºC sensación', values: hourly.apparent_temperature.map(v => `${v}°`) },
+    { label: 'ºC punto de rocío', values: hourly.dew_point_2m.map(v => `${v}°`) },
+    { label: 'ºC a 850 hPa', values: hourly.temperature_850hPa.map(v => `${v}°`) },
+    { label: 'Dirección media del viento', values: hourly.wind_direction_10m.map(v => `${v}° ${getWindArrow(v)}`) },
+    { label: 'Velocidad media del viento', values: hourly.wind_speed_10m.map(v => `${v} km/h`) },
+    { label: 'Ráfagas de viento medias', values: hourly.wind_gusts_10m.map(v => `${v} km/h`) },
+    { label: '% Cobertura nubes', values: hourly.cloud_cover.map(v => `${v}%`) },
+    { label: 'Precipitación esperada', values: hourly.precipitation.map(v => `${v} mm`) }
+  ];
+
+  rowsData.forEach(r => {
+    const tr = document.createElement('tr');
+    let html = `<td class="sticky-col">${r.label}</td>`;
+    r.values.forEach((val, idx) => {
+      const tStr = hourly.time[idx];
+      const dateObj = new Date(tStr);
+      
+      const classes = [];
+      if (dateObj.getHours() === 0) classes.push('day-border');
+      if (isNightHour(tStr)) classes.push('night-cell');
+
+      const classAttr = classes.length ? ` class="${classes.join(' ')}"` : '';
+      html += `<td${classAttr}>${val}</td>`;
+    });
+    tr.innerHTML = html;
+    tBody.appendChild(tr);
+  });
+}
+
 });
