@@ -406,7 +406,8 @@ document.addEventListener('DOMContentLoaded', () => {
       animationPosition = position;
 
       if (animationTimer) {
-        animationTimer = setTimeout(playAnimation, ANIMATION_DELAY_MS);
+        const delay = (position === mapFrames.length - 1) ? 2000 : ANIMATION_DELAY_MS;
+        animationTimer = setTimeout(playAnimation, delay);
       }
       return;
     }
@@ -426,7 +427,8 @@ document.addEventListener('DOMContentLoaded', () => {
       isLoading = false;
 
       if (animationTimer) {
-        animationTimer = setTimeout(playAnimation, ANIMATION_DELAY_MS);
+        const delay = (position === mapFrames.length - 1) ? 2000 : ANIMATION_DELAY_MS;
+        animationTimer = setTimeout(playAnimation, delay);
       }
     });
 
