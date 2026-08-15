@@ -33,6 +33,8 @@
         <label>Producto / Variable:</label>
         <select id="product-select">
           <option value="precip">Precipitaciones</option>
+          <option value="precip_acc">Precipitación acumulada (solo península)</option>
+          <option value="clouds">Nubosidad (solo península)</option>
           <option value="t2m">Temperatura 2m</option>
           <option value="t850">Temperatura 850hPa</option>
           <option value="t500">Temperatura 500hPa</option>
@@ -51,10 +53,13 @@
       </div>
     </div>
     <div class="panel-group time-nav">
+      <div>
         <button id="prev-time-btn">‹ Hora Anterior</button>
         <span id="forecast-hour-label">Pronóstico: +0h</span>
         <button id="next-time-btn">Hora Siguiente ›</button>
         <button id="openMeteogramBtn" style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer;">¡Abre el meteograma!</button>
+      </div>
+      <div id="model-selector-buttons"></div>
       </div>
 
     <div id="images-display-container" class="images-container"></div>
