@@ -7,37 +7,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const forecastHourLabel = document.getElementById('forecast-hour-label');
   const imagesDisplayContainer = document.getElementById('images-display-container');
   const preloadBtn = document.getElementById('preload-btn');
+  const modelSelectorButtons = document.getElementById('model-selector-buttons');
+  let activeModelId = null;
 
   let offsetFromNow = 1;
 
   const MODELS_CONFIG = {
     peninsula: [
+      { id: 'ecmwf', name: 'ECMWF 9KM', runInterval: 6, delayHours: 6, maxHour: 360, step: 1 },
+      { id: 'icon_eu', name: 'ICON-EU', runInterval: 3, delayHours: 3, maxHour: 120, step: 1 },
+      { id: 'ukmo_hd', name: 'UKMO HD', runInterval: 6, delayHours: 6, maxHour: 144, step: 1 },
       { id: 'arome', name: 'AROME 1.3KM', runInterval: 6, delayHours: 6, maxHour: 42, step: 1 },
       { id: 'arome25', name: 'AROME 2.5KM', runInterval: 6, delayHours: 6, maxHour: 42, step: 1 },
       { id: 'wrf', name: 'WRF 2KM', runInterval: 6, delayHours: 6, maxHour: 36, step: 1 },
-      { id: 'ukmo_hd', name: 'UKMO HD', runInterval: 6, delayHours: 6, maxHour: 144, step: 1 },
-      { id: 'arpege', name: 'ARPEGE', runInterval: 6, delayHours: 6, maxHour: 114, step: 1 },
       { id: 'gfs', name: 'GFS', runInterval: 6, delayHours: 6, maxHour: 240, step: 3 },
-      { id: 'ecmwf', name: 'ECMWF 9KM', runInterval: 6, delayHours: 6, maxHour: 360, step: 1 },
-      { id: 'icon_eu', name: 'ICON-EU', runInterval: 3, delayHours: 3, maxHour: 120, step: 1 }
+      { id: 'arpege', name: 'ARPEGE', runInterval: 6, delayHours: 6, maxHour: 114, step: 1 }
     ],
     europa: [
       { id: 'ecmwf_eu', name: 'ECMWF Europa', runInterval: 6, delayHours: 6, maxHour: 360, step: 3 },
       { id: 'icon_eu_eu', name: 'ICON-EU Europa', runInterval: 6, delayHours: 3, maxHour: 120, step: 1 },
-      { id: 'gfs_eu', name: 'GFS Europa', runInterval: 6, delayHours: 6, maxHour: 192, step: 6 },
-      { id: 'ukmo_eu', name: 'UKMO Europa', runInterval: 12, delayHours: 6, maxHour: 168, step: 12 }
+      { id: 'ukmo_eu', name: 'UKMO Europa', runInterval: 12, delayHours: 6, maxHour: 168, step: 12 },
+      { id: 'gfs_eu', name: 'GFS Europa', runInterval: 6, delayHours: 6, maxHour: 192, step: 6 }
     ]
   };
 
   const PRODUCTS_MAP = {
-    arome: { precip: '1', t2m: '0', wind10m: '3', gust10m: '11', cape: '28' },
+    arome: { precip: '1', precip_acc: '25', clouds: '54', t2m: '0', wind10m: '3', gust10m: '11', cape: '28' },
     arome25: { t850: '16', t500: '21', geop500: '2', wind700_850: '35', wind900: '8' },
-    wrf: { precip: '1', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28' },
-    ukmo_hd: { precip: '1', t2m: '40', t850: '16', t500: '21', wind10m: '3', gust10m: '11', geop500: '2' },
-    arpege: { precip: '1', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28' },
-    gfs: { precip: '574', t2m: '580', t850: '7', t500: '21', wind10m: '602', gust10m: '289', wind700_850: '314', wind900: '104', geop500: '21', cape: '109' },
-    ecmwf: { precip: '2', t2m: '19', t850: '1', t500: '13', wind10m: '14', gust10m: '27', wind700_850: '6', wind900: '10', geop500: '0', cape: '11' },
-    icon_eu: { precip: '1', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '34', wind900: '33', geop500: '2', cape: '28' },
+    wrf: { precip: '1', precip_acc: '25', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28' },
+    ukmo_hd: { precip: '1', precip_acc: '25', clouds: '4', t2m: '40', t850: '16', t500: '21', wind10m: '3', gust10m: '11', geop500: '2' },
+    arpege: { precip: '1', precip_acc: '25', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28' },
+    gfs: { precip: '574', precip_acc: '777', clouds: '562', t2m: '580', t850: '7', t500: '21', wind10m: '602', gust10m: '289', wind700_850: '314', wind900: '104', geop500: '21', cape: '109' },
+    ecmwf: { precip: '2', precip_acc: '25', clouds: '35', t2m: '19', t850: '1', t500: '13', wind10m: '14', gust10m: '27', wind700_850: '6', wind900: '10', geop500: '0', cape: '11' },
+    icon_eu: { precip: '1', precip_acc: '25', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '34', wind900: '33', geop500: '2', cape: '28' },
 
     ecmwf_eu: { precip: '2', t2m: '9', t850: '1', t500: '13', wind10m: '14', gust10m: '27', wind700_850: '6', jetstream: '5', geop500: '0' },
     icon_eu_eu: { precip: '1', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '34', geop500: '2', cape: '28' },
@@ -106,20 +108,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (productSelect.value === 'jetstream') productSelect.value = 'precip';
     }
 
+    if (!activeModelId || !models.some(m => m.id === activeModelId)) {
+      activeModelId = models[0] ? models[0].id : null;
+    }
+
     models.forEach(model => {
       const runs = generateAvailableRuns(model.runInterval, model.delayHours);
 
       const wrapper = document.createElement('div');
       wrapper.className = 'model-option';
 
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = `chk-${model.id}`;
-      checkbox.value = model.id;
-      checkbox.checked = true;
-
       const label = document.createElement('label');
-      label.htmlFor = `chk-${model.id}`;
       label.textContent = model.name;
       label.style.minWidth = 'auto';
 
@@ -133,16 +132,62 @@ document.addEventListener('DOMContentLoaded', () => {
         runSelect.appendChild(opt);
       });
 
-      wrapper.appendChild(checkbox);
       wrapper.appendChild(label);
       wrapper.appendChild(runSelect);
       modelsContainer.appendChild(wrapper);
 
-      checkbox.addEventListener('change', updateImages);
       runSelect.addEventListener('change', updateImages);
     });
 
+    renderModelButtons();
     updateImages();
+  }
+
+  function renderModelButtons() {
+    modelSelectorButtons.innerHTML = '';
+    const region = regionSelect.value;
+    const models = MODELS_CONFIG[region] || [];
+    const selectedProduct = productSelect.value;
+
+    const availableModels = models.filter(model => {
+      return PRODUCTS_MAP[model.id] && PRODUCTS_MAP[model.id][selectedProduct] !== undefined;
+    });
+
+    if (!activeModelId || !availableModels.some(m => m.id === activeModelId)) {
+      activeModelId = availableModels[0] ? availableModels[0].id : null;
+    }
+
+    availableModels.forEach((model, index) => {
+      if (index > 0) {
+        const prevId = availableModels[index - 1].id;
+        const currId = model.id;
+
+        const isUkmoToArome = prevId.startsWith('ukmo') && currId.startsWith('arome');
+        const isWrfToGfs = prevId === 'wrf' && currId === 'gfs';
+
+        if (isUkmoToArome || isWrfToGfs) {
+          const separator = document.createElement('span');
+          separator.className = 'model-separator';
+          modelSelectorButtons.appendChild(separator);
+        }
+      }
+
+      const btn = document.createElement('button');
+      btn.className = 'model-select-btn';
+      if (model.id === activeModelId) {
+        btn.classList.add('active');
+      }
+      btn.textContent = model.name;
+
+      btn.addEventListener('click', () => {
+        activeModelId = model.id;
+        document.querySelectorAll('.model-select-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateImages();
+      });
+
+      modelSelectorButtons.appendChild(btn);
+    });
   }
 
   function snapToValidHour(targetHour, step) {
@@ -242,7 +287,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateImages() {
-    imagesDisplayContainer.innerHTML = '';
     const region = regionSelect.value;
     const models = MODELS_CONFIG[region] || [];
     const selectedProduct = productSelect.value;
@@ -254,29 +298,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const month = targetDate.getMonth() + 1;
     const localHours = String(targetDate.getHours()).padStart(2, '0');
     const localMinutes = String(targetDate.getMinutes()).padStart(2, '0');
-    forecastHourLabel.textContent = `Ahora ${sign}${offsetFromNow}h (${day}/${month} ${localHours}:${localMinutes}LT)`;
+    forecastHourLabel.textContent = `Ahora ${sign}${offsetFromNow}h (Imágen más cercana a: ${day}/${month} ${localHours}:${localMinutes}LT)`;
 
-    models.forEach(model => {
-      const chk = document.getElementById(`chk-${model.id}`);
-      if (!chk || !chk.checked) return;
+    if (!activeModelId) {
+      imagesDisplayContainer.innerHTML = '';
+      return;
+    }
 
-      const runSelect = document.getElementById(`run-${model.id}`);
-      const selectedRun = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
+    const model = models.find(m => m.id === activeModelId);
+    if (!model) {
+      imagesDisplayContainer.innerHTML = '';
+      return;
+    }
 
-      const imgUrl = buildImageUrl(model.id, selectedRun, selectedProduct, model);
+    const runSelect = document.getElementById(`run-${model.id}`);
+    const selectedRun = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
 
-      if (imgUrl) {
-        const card = document.createElement('div');
-        card.className = 'model-card-img';
+    const imgUrl = buildImageUrl(model.id, selectedRun, selectedProduct, model);
 
-        const img = document.createElement('img');
-        img.src = imgUrl;
-        img.alt = `${model.name} - ${selectedProduct}`;
-        card.appendChild(img);
+    if (!imgUrl) {
+      imagesDisplayContainer.innerHTML = '';
+      return;
+    }
 
-        imagesDisplayContainer.appendChild(card);
+    const existingImg = imagesDisplayContainer.querySelector('img');
+
+    if (existingImg) {
+      existingImg.src = imgUrl;
+      existingImg.alt = `${model.name} - ${selectedProduct}`;
+    } else {
+      const currentHeight = imagesDisplayContainer.offsetHeight;
+      if (currentHeight > 0) {
+        imagesDisplayContainer.style.minHeight = `${currentHeight}px`;
       }
-    });
+
+      imagesDisplayContainer.innerHTML = '';
+
+      const card = document.createElement('div');
+      card.className = 'model-card-img';
+
+      const img = document.createElement('img');
+      img.src = imgUrl;
+      img.alt = `${model.name} - ${selectedProduct}`;
+      
+      img.onload = () => {
+        imagesDisplayContainer.style.minHeight = '';
+      };
+
+      card.appendChild(img);
+      imagesDisplayContainer.appendChild(card);
+    }
   }
 
   function preloadImages() {
@@ -294,9 +365,6 @@ document.addEventListener('DOMContentLoaded', () => {
       offsetFromNow = originalOffset + h;
 
       models.forEach(model => {
-        const chk = document.getElementById(`chk-${model.id}`);
-        if (!chk || !chk.checked) return;
-
         const runSelect = document.getElementById(`run-${model.id}`);
         const selectedRun = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
         const imgUrl = buildImageUrl(model.id, selectedRun, selectedProduct, model);
@@ -335,7 +403,10 @@ document.addEventListener('DOMContentLoaded', () => {
   preloadBtn.addEventListener('click', preloadImages);
 
   regionSelect.addEventListener('change', renderModelCheckboxes);
-  productSelect.addEventListener('change', updateImages);
+  productSelect.addEventListener('change', () => {
+    renderModelButtons();
+    updateImages();
+  });
 
   prevTimeBtn.addEventListener('click', () => {
     offsetFromNow -= 1;
