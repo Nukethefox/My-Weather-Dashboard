@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tafBtn.textContent = 'Consultando...';
 
     try {
-      const targetUrl = `https://aviationweather.gov/api/data/taf?ids=${icaos}&format=json&_t=${Date.now()}`;
+      const targetUrl = `https://aviationweather.gov/api/data/taf?ids=${icaos}&format=json`;
       const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
 
       const response = await fetch(proxyUrl);
