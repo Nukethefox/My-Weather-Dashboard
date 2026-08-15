@@ -427,3 +427,36 @@ select:focus {
   background-color: #0b1120 !important;
   color: #94a3b8;
 }
+
+#model-selector-buttons {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.model-select-btn {
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.model-select-btn:hover,
+.model-select-btn.active {
+    background-color: #007bff;
+    color: #ffffff;
+    border-color: #0056b3;
+}
+
+.model-separator {
+  display: inline-block;
+  width: 3px;
+  height: 30px;
+  background-color: #475569;
+  margin: 0 6px;
+  vertical-align: middle;
+}
