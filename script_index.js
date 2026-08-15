@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     metarBtn.textContent = 'Consultando...';
 
     try {
-      const targetUrl = `https://aviationweather.gov/api/data/metar?ids=${icaos}&format=json&_t=${Date.now()}`;
+     const targetUrl = `https://aviationweather.gov/api/data/metar?ids=${icaos}&format=json`;
       const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
 
       const response = await fetch(proxyUrl);
