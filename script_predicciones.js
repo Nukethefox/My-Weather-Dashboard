@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const preloadBtn = document.getElementById('preload-btn');
   const modelSelectorButtons = document.getElementById('model-selector-buttons');
   let activeModelId = null;
+  const datePickerSelect = document.getElementById('date-picker-select');
 
   let offsetFromNow = 1;
 
@@ -46,6 +47,22 @@ document.addEventListener('DOMContentLoaded', () => {
     gfs_eu: { precip: '2', t2m: '9', t850: '1', t500: '13', wind10m: '14', jetstream: '5', geop500: '0', cape: '11' },
     ukmo_eu: { precip: '2', t850: '1', t500: '13', geop500: '0' }
   };
+
+  function getModelLimitDate(modelLimitHours, runHourUtc) {
+    const now = new Date();
+    const currentUtcHour = now.getUTCHours() + (now.getUTCMinutes() / 60);
+    let elapsedSinceRun = currentUtcHour - runHourUtc;
+    if (elapsedSinceRun < 0) elapsedSinceRun += 24;
+
+    const remainingHours = modelLimitHours - elapsedSinceRun;
+    const limitDate = new Date(now.getTime() + remainingHours * 60 * 60 * 1000);
+
+    const day = limitDate.getDate();
+    const month = limitDate.getMonth() + 1;
+    const hours = String(limitDate.getHours()).padStart(2, '0');
+
+    return `${day}/${month} ${hours}h`;
+  }
 
   function getLatestAvailableRun(runInterval, delayHours) {
     const now = new Date();
@@ -174,10 +191,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const btn = document.createElement('button');
       btn.className = 'model-select-btn';
+      btn.setAttribute('data-model-id', model.id);
       if (model.id === activeModelId) {
         btn.classList.add('active');
       }
-      btn.textContent = model.name;
+
+      const runSelect = document.getElementById(`run-${model.id}`);
+      const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
+      const runHourUtc = parseInt(selectedRunStr.substring(8, 10), 10);
+
+      const limitText = getModelLimitDate(model.maxHour, runHourUtc);
+      btn.innerHTML = `${model.name}<br><small>Hasta ${limitText}</small>`;
 
       btn.addEventListener('click', () => {
         activeModelId = model.id;
@@ -188,6 +212,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
       modelSelectorButtons.appendChild(btn);
     });
+
+    let minLimitDateObj = null;
+
+    availableModels.forEach(model => {
+      const runSelect = document.getElementById(`run-${model.id}`);
+      const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
+      const runHourUtc = parseInt(selectedRunStr.substring(8, 10), 10);
+
+      const now = new Date();
+      const currentUtcHour = now.getUTCHours() + (now.getUTCMinutes() / 60);
+      let elapsedSinceRun = currentUtcHour - runHourUtc;
+      if (elapsedSinceRun < 0) elapsedSinceRun += 24;
+
+      const remainingHours = model.maxHour - elapsedSinceRun;
+      const limitDate = new Date(now.getTime() + remainingHours * 60 * 60 * 1000);
+
+      if (!minLimitDateObj || limitDate < minLimitDateObj) {
+        minLimitDateObj = limitDate;
+      }
+    });
+
+    if (minLimitDateObj) {
+      const day = minLimitDateObj.getDate();
+      const month = minLimitDateObj.getMonth() + 1;
+      const hours = String(minLimitDateObj.getHours()).padStart(2, '0');
+      const minLimitText = `${day}/${month} ${hours}h`;
+
+      const textInfo = document.getElementById('models-limit-info');
+      if (textInfo) {
+        textInfo.textContent = `Todos los modelos están disponibles hasta ${minLimitText}`;
+      }
+    }
+    updateModelButtonsState();
   }
 
   function snapToValidHour(targetHour, step) {
@@ -298,7 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const month = targetDate.getMonth() + 1;
     const localHours = String(targetDate.getHours()).padStart(2, '0');
     const localMinutes = String(targetDate.getMinutes()).padStart(2, '0');
-    forecastHourLabel.textContent = `Ahora ${sign}${offsetFromNow}h (Imágen más cercana a: ${day}/${month} ${localHours}:${localMinutes}LT)`;
+    forecastHourLabel.textContent = `Ahora ${sign}${offsetFromNow}h (Imágen más cercana a: ${day}/${month} ${localHours}h)`;
+
+    updateModelButtonsState();
 
     if (!activeModelId) {
       imagesDisplayContainer.innerHTML = '';
@@ -641,5 +700,54 @@ function renderMeteogram(data) {
     tBody.appendChild(tr);
   });
 }
+
+datePickerSelect.addEventListener('change', () => {
+    if (!datePickerSelect.value) return;
+
+    const selectedDate = new Date(datePickerSelect.value);
+    selectedDate.setMinutes(0, 0, 0);
+
+    const now = new Date();
+    now.setMinutes(0, 0, 0);
+
+    const diffMs = selectedDate.getTime() - now.getTime();
+    offsetFromNow = Math.round(diffMs / (1000 * 60 * 60));
+
+    updateImages();
+  });
+
+  function updateModelButtonsState() {
+    const modelButtons = document.querySelectorAll('.model-select-btn');
+    const region = regionSelect.value;
+    const models = MODELS_CONFIG[region] || [];
+
+    const targetDate = new Date();
+    targetDate.setHours(targetDate.getHours() + offsetFromNow);
+
+    modelButtons.forEach(btn => {
+      const modelId = btn.getAttribute('data-model-id');
+      const model = models.find(m => m.id === modelId);
+
+      if (model) {
+        const runSelect = document.getElementById(`run-${model.id}`);
+        const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
+        const runHourUtc = parseInt(selectedRunStr.substring(8, 10), 10);
+
+        const now = new Date();
+        const currentUtcHour = now.getUTCHours() + (now.getUTCMinutes() / 60);
+        let elapsedSinceRun = currentUtcHour - runHourUtc;
+        if (elapsedSinceRun < 0) elapsedSinceRun += 24;
+
+        const remainingHours = model.maxHour - elapsedSinceRun;
+        const limitDate = new Date(now.getTime() + remainingHours * 60 * 60 * 1000);
+
+        if (targetDate > limitDate) {
+          btn.classList.add('disabled-model');
+        } else {
+          btn.classList.remove('disabled-model');
+        }
+      }
+    });
+  }
 
 });
