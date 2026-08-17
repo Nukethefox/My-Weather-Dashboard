@@ -8,6 +8,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const satMode = document.getElementById('sat-mode');
   const satType = document.getElementById('sat-type');
   const satImage = document.getElementById('sat-image');
+  let lastMetarTimestamp = null;
+
+  function normalizeWeatherReportArray(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (!payload || typeof payload !== 'object') return [];
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload.results)) return payload.results;
+    if (Array.isArray(payload.metar)) return payload.metar;
+    if (Array.isArray(payload.METAR)) return payload.METAR;
+    return [];
+  }
+
+  function getNewestReport(reports) {
+    return reports.reduce((latest, report) => {
+      if (!report || !report.reportTime) return latest;
+      if (!latest || !latest.reportTime) return report;
+      return new Date(report.reportTime) > new Date(latest.reportTime) ? report : latest;
+    }, null);
+  }
 
   function getSstUrl() {
     const date = new Date();
@@ -58,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
       metarBtn.textContent = 'Consultar METAR';
     }
   }
+
 
   function decodeWxString(rawWx) {
     if (!rawWx) return '';
@@ -188,6 +208,14 @@ document.addEventListener('DOMContentLoaded', () => {
         reportDateStr = `${hours}:${minutes} Z`;
       }
 
+      const rawOb = report.rawOb || '';
+
+      let variableWindHtml = '';
+      const varWindMatch = rawOb.match(/\b(\d{3})V(\d{3})\b/);
+      if (varWindMatch) {
+        variableWindHtml = `<div class="stat-label" style="color:#eab308; margin-top:2px;">(Variable entre ${varWindMatch[1]}° y ${varWindMatch[2]}°)</div>`;
+      }
+
       const catClass = `flt-${(report.fltCat || 'vfr').toLowerCase()}`;
 
       let cloudsHtml = '';
@@ -196,9 +224,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         cloudsHtml = sortedClouds.map(c => {
           const translation = coverTranslations[c.cover] ? ` (${coverTranslations[c.cover]})` : '';
+          
+          let cloudTypeExtra = '';
+          if (c.base !== undefined) {
+            const baseHundredStr = String(Math.round(c.base / 100)).padStart(3, '0');
+            const cloudRegex = new RegExp(`\\b${c.cover}${baseHundredStr}(CB|TCU)\\b`, 'i');
+            const cloudMatch = rawOb.match(cloudRegex);
+
+            if (cloudMatch) {
+              const typeCode = cloudMatch[1].toUpperCase();
+              if (typeCode === 'CB') {
+                cloudTypeExtra = ' <strong style="color: #ef4444; background: rgba(239, 68, 68, 0.15); padding: 1px 5px; border-radius: 4px;">⚠️ Cumulonimbos</strong>';
+              } else if (typeCode === 'TCU') {
+                cloudTypeExtra = ' <strong style="color: #f97316; background: rgba(249, 115, 22, 0.15); padding: 1px 5px; border-radius: 4px;">⚠️ Torrecúmulos</strong>';
+              }
+            }
+          }
+
           return `
             <div class="cloud-item">
-              <span>☁️ ${c.cover}${translation}</span>
+              <span>☁️ ${c.cover}${translation}${cloudTypeExtra}</span>
               <span>Base: ${c.base} ft (${Math.round(c.base * 0.3048)} m)</span>
             </div>
           `;
@@ -258,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div>
               <div class="stat-label">Viento</div>
               <div class="stat-value">${report.wdir || 0}° a ${report.wspd || 0} kt (${windKmh} km/h)</div>
+              ${variableWindHtml}
               ${windGustsKmh ? `<div class="stat-label" style="color:#ef4444;">Ráfagas: ${report.wgst} kt (${windGustsKmh} km/h)</div>` : ''}
             </div>
           </div>
@@ -269,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           ${weatherHtml}
 
-          <div class="raw-ob">${report.rawOb || ''}</div>
+          <div class="raw-ob">${rawOb}</div>
         </div>
       `;
 
@@ -285,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function setDefaultSatType() {
     const currentHour = new Date().getHours();
     if (currentHour >= 9 && currentHour < 17) {
-      satType.value = 'viscol';
+      satType.value = 'vistruecol';
     } else {
       satType.value = 'ir';
     }
