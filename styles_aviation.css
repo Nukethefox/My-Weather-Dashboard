@@ -335,35 +335,53 @@ body {
   font-size: 0.78rem;
 }
 
-.cell-change-tempo {
-  background-color: rgba(236, 72, 153, 0.15);
-  border: 1px dashed #ec4899 !important;
-}
-
-.cell-change-becmg {
-  background-color: rgba(245, 158, 11, 0.15);
-  border: 1px dashed #f59e0b !important;
-}
-
 .change-tag {
   font-weight: bold;
   font-size: 0.7rem;
   display: block;
 }
 
-.tag-tempo {
-  color: #f472b6;
+.cell-change.change-color-0 {
+  background-color: rgba(59, 130, 246, 0.15);
+  border: 1px dashed #3b82f6 !important;
+  color: #93c5fd;
 }
+.cell-change.change-color-0 .change-tag { color: #60a5fa; }
 
-.tag-becmg {
-  color: #fbbf24;
+.cell-change.change-color-1 {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px dashed #ef4444 !important;
+  color: #fca5a5;
 }
-.tempo-tag {
-  color: #f472b6;
-  font-weight: bold;
-  font-size: 0.7rem;
-  display: block;
+.cell-change.change-color-1 .change-tag { color: #f87171; }
+
+.cell-change.change-color-2 {
+  background-color: rgba(234, 179, 8, 0.15);
+  border: 1px dashed #eab308 !important;
+  color: #fde047;
 }
+.cell-change.change-color-2 .change-tag { color: #facc15; }
+
+.cell-change.change-color-3 {
+  background-color: rgba(34, 197, 94, 0.15);
+  border: 1px dashed #22c55e !important;
+  color: #86efac;
+}
+.cell-change.change-color-3 .change-tag { color: #4ade80; }
+
+.cell-change.change-color-4 {
+  background-color: rgba(249, 115, 22, 0.15);
+  border: 1px dashed #f97316 !important;
+  color: #fdba74;
+}
+.cell-change.change-color-4 .change-tag { color: #fb923c; }
+
+.cell-change.change-color-5 {
+  background-color: rgba(236, 72, 153, 0.15);
+  border: 1px dashed #ec4899 !important;
+  color: #fbcfe8;
+}
+.cell-change.change-color-5 .change-tag { color: #f472b6; }
 
 .model-title {
     font-weight: bold;
@@ -447,4 +465,39 @@ select.vedurRun:focus {
     display:block;
     margin:10px auto;
     border-radius:8px;
+}
+
+.taf-temps {
+  display: flex;
+  gap: 1.5rem;
+  background: #0f172a;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.temp-max {
+  color: #ef4444;
+}
+
+.temp-min {
+  color: #38bdf8;
+}
+
+.cloud-type-badge {
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.cloud-type-badge.cb {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.cloud-type-badge.tcu {
+  color: #f97316;
+  background: rgba(249, 115, 22, 0.15);
 }
