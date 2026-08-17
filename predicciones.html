@@ -13,7 +13,6 @@
     <a href="predicciones.html" class="nav-btn active">Predicciones</a>
     <a href="aviation.html" class="nav-btn">Predicciones aeronáuticas</a>
   </nav>
-
   <main class="content-container">
     <div class="control-panel-main">
       <div class="panel-group">
@@ -23,12 +22,10 @@
           <option value="europa">Europa</option>
         </select>
       </div>
-
       <div class="panel-group">
         <label>Modelos a comparar:</label>
         <div id="models-container" class="checkbox-group"></div>
       </div>
-
       <div class="panel-group">
         <label>Producto / Variable:</label>
         <select id="product-select">
@@ -58,17 +55,16 @@
         <span id="forecast-hour-label">Pronóstico: +0h</span>
         <button id="next-time-btn">Hora Siguiente ›</button>
         <button id="openMeteogramBtn" style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer;">¡Abre el meteograma!</button>
+        <input type="datetime-local" id="date-picker-select" class="date-picker-input">
       </div>
       <div id="model-selector-buttons"></div>
+      <span id="models-limit-info" class="models-limit-info"></span>
       </div>
-
     <div id="images-display-container" class="images-container"></div>
   </main>
-
   <footer class="main-footer">
     <p>Datos de <a href="https://www.meteociel.fr/index.php?region=sp" target="_blank" rel="noopener">Meteociel.fr</a></p>
   </footer>
-
   <div id="meteogramModal" class="meteogram-modal hidden">
   <div class="meteogram-modal-content">
     <div class="meteogram-header">
@@ -86,9 +82,7 @@
       </div>
       <button id="closeMeteogramBtn" class="close-btn">&times;</button>
     </div>
-    
     <div id="meteogramLoading" class="meteogram-loading hidden">Cargando datos...</div>
-
     <div class="meteogram-scroll-container">
       <table id="meteogramTable" class="meteogram-table">
         <thead id="meteogramTableHead"></thead>
@@ -97,7 +91,6 @@
     </div>
   </div>
 </div>
-
   <script src="script_predicciones.js"></script>
 </body>
 </html>
