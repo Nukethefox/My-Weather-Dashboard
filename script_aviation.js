@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tafInput = document.getElementById('taf-input');
   const tafBtn = document.getElementById('taf-btn');
   const tafDisplay = document.getElementById('taf-display');
+  let lastTafTimestamp = null;
 
   async function fetchTafData() {
     const rawInput = tafInput.value.trim().toUpperCase();
@@ -16,15 +17,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
 
       const response = await fetch(proxyUrl);
-      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
-      const data = await response.json();
-      if (!data || data.length === 0) {
+      if (!response.ok) {
+        throw new Error(`Error HTTP ${response.status}`);
+      }
+
+      const parsed = await response.json();
+
+      if (!Array.isArray(parsed) || parsed.length === 0) {
         alert('No se encontraron datos TAF para los códigos ICAO indicados.');
         return;
       }
 
-      renderTafCards(data);
+      renderTafCards(parsed);
     } catch (error) {
       alert('Error al consultar TAF: ' + error.message);
     } finally {
@@ -165,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const hourlyData = [];
       let currentTs = startHourTimestamp;
 
-      while (currentTs < endHourTimestamp) {
+      while (currentTs <= endHourTimestamp) {
         const hourEndTs = currentTs + 3600;
 
         let activeBase = { ...baseFcst };
@@ -173,9 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 1; i < report.fcsts.length; i++) {
           const fc = report.fcsts[i];
-          const changeType = fc.fcstChange || '';
 
-          if (fc.timeFrom <= currentTs && fc.timeTo >= hourEndTs) {
+          if (fc.timeFrom <= currentTs && fc.timeTo >= currentTs) {
             activeChanges.push(fc);
           }
         }
@@ -189,27 +193,52 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTs += 3600;
       }
 
-      function formatWind(wdir, wspd, wgst) {
+      function parseTxTn(raw) {
+        if (!raw) return { tx: null, tn: null };
+        const txMatch = raw.match(/TX(\d{2})\/(\d{2})(\d{2})Z/);
+        const tnMatch = raw.match(/TN(\d{2})\/(\d{2})(\d{2})Z/);
+        return {
+          tx: txMatch ? `${txMatch[1]}°C (${txMatch[2]} ${txMatch[3]}:00Z)` : null,
+          tn: tnMatch ? `${tnMatch[1]}°C (${tnMatch[2]} ${tnMatch[3]}:00Z)` : null
+        };
+      }
+
+      function formatWindObj(wdir, wspd, wgst) {
         if (wdir === null || wdir === undefined) return '--';
         const wdirStr = wdir === 'VRB' ? 'VRB' : `${wdir}°`;
-        const wspdStr = wspd !== null ? `${wspd}kt` : '';
+        if (wspd === null || wspd === undefined) return wdirStr;
+        const wspdKmh = Math.round(wspd * 1.852);
         const wgstStr = wgst ? ` G${wgst}kt` : '';
-        return `${wdirStr} ${wspdStr}${wgstStr}`;
+        const wgstKmhStr = wgst ? ` G${Math.round(wgst * 1.852)}km/h` : '';
+        return `${wdirStr} ${wspd}kt (${wspdKmh}km/h)${wgstStr ? ` / G${wgst}kt (${wgstKmhStr.trim()})` : ''}`;
       }
 
-      function formatVisib(visib) {
-        if (!visib) return '--';
-        if (visib === '6+') return '>10 km';
-        const vMiles = parseFloat(visib);
-        return !isNaN(vMiles) ? `${(vMiles * 1.60934).toFixed(1)} km` : `${visib}`;
+      function parseVisibVal(v) {
+        if (!v) return 9999;
+        if (v === '6+') return 10000;
+        const vMiles = parseFloat(v);
+        return !isNaN(vMiles) ? vMiles * 1.60934 * 1000 : 9999;
       }
 
-      function formatClouds(clouds) {
+      function formatVisibVal(v) {
+        if (!v) return '--';
+        if (v === '6+' || parseVisibVal(v) >= 10000) return '>10 km';
+        const vMiles = parseFloat(v);
+        return !isNaN(vMiles) ? `${(vMiles * 1.60934).toFixed(1)} km` : `${v}`;
+      }
+
+      function formatCloudsArr(clouds) {
         if (!clouds || clouds.length === 0) return 'NSC / CAVOK';
         return clouds.map(c => {
           const trans = coverTranslations[c.cover] || c.cover;
           const baseStr = c.base ? ` ${c.base}ft` : '';
-          return `${trans}${baseStr}`;
+          let typeStr = '';
+          if (c.type === 'CB') {
+            typeStr = ' <strong class="cloud-type-badge cb"> Cumulonimbos</strong>';
+          } else if (c.type === 'TCU') {
+            typeStr = ' <strong class="cloud-type-badge tcu"> Torrecúmulos</strong>';
+          }
+          return `${trans}${baseStr}${typeStr}`;
         }).join('<br>');
       }
 
@@ -226,53 +255,92 @@ document.addEventListener('DOMContentLoaded', () => {
 
         headerRow += `<th>${day}/${hour}Z</th>`;
 
-        let windChangesHtml = '';
-        let visibChangesHtml = '';
-        let cloudsChangesHtml = '';
-        let wxChangesHtml = '';
+        let effWind = formatWindObj(item.base.wdir, item.base.wspd, item.base.wgst);
+        let windClass = '';
+        
+        for (let ch of item.changes) {
+          if (ch.wdir !== null && ch.wdir !== undefined) {
+            const chWind = formatWindObj(ch.wdir, ch.wspd, ch.wgst);
+            if (chWind !== formatWindObj(item.base.wdir, item.base.wspd, item.base.wgst)) {
+              effWind = chWind;
+              const idx = report.fcsts.indexOf(ch) - 1;
+              windClass = `change-color-${idx >= 0 ? idx % 6 : 0}`;
+            }
+          }
+        }
+
+        let minVisVal = parseVisibVal(item.base.visib);
+        let effVisStr = formatVisibVal(item.base.visib);
+        let visClass = '';
 
         item.changes.forEach(ch => {
-          const probStr = ch.probability ? `PROB${ch.probability} ` : '';
-          const type = ch.fcstChange || 'CAMBIO';
-          const tag = `${probStr}${type}`;
-          
-          let blockClass = 'cell-change-tempo';
-          let tagClass = 'tag-tempo';
-
-          if (type === 'BECMG' || type === 'FM') {
-            blockClass = 'cell-change-becmg';
-            tagClass = 'tag-becmg';
-          }
-
-          if (ch.wdir !== null && ch.wdir !== undefined) {
-            windChangesHtml += `<div class="cell-change ${blockClass}"><span class="change-tag ${tagClass}">${tag}</span>${formatWind(ch.wdir, ch.wspd, ch.wgst)}</div>`;
-          }
           if (ch.visib) {
-            visibChangesHtml += `<div class="cell-change ${blockClass}"><span class="change-tag ${tagClass}">${tag}</span>${formatVisib(ch.visib)}</div>`;
-          }
-          if (ch.clouds && ch.clouds.length > 0) {
-            cloudsChangesHtml += `<div class="cell-change ${blockClass}"><span class="change-tag ${tagClass}">${tag}</span>${formatClouds(ch.clouds)}</div>`;
-          }
-          if (ch.wxString) {
-            wxChangesHtml += `<div class="cell-change ${blockClass}"><span class="change-tag ${tagClass}">${tag}</span>${decodeWxString(ch.wxString)}</div>`;
+            const val = parseVisibVal(ch.visib);
+            if (val < minVisVal) {
+              minVisVal = val;
+              effVisStr = formatVisibVal(ch.visib);
+              const idx = report.fcsts.indexOf(ch) - 1;
+              visClass = `change-color-${idx >= 0 ? idx % 6 : 0}`;
+            }
           }
         });
 
-        const windCell = windChangesHtml || formatWind(item.base.wdir, item.base.wspd, item.base.wgst);
-        const visibCell = visibChangesHtml || formatVisib(item.base.visib);
-        const cloudsCell = cloudsChangesHtml || formatClouds(item.base.clouds);
-        const wxCell = wxChangesHtml || (item.base.wxString ? decodeWxString(item.base.wxString) : '--');
+        let effCloudsStr = formatCloudsArr(item.base.clouds);
+        let cloudsClass = '';
 
-        windRow += `<td>${windCell}</td>`;
-        visibRow += `<td>${visibCell}</td>`;
-        cloudsRow += `<td>${cloudsCell}</td>`;
-        wxRow += `<td>${wxCell}</td>`;
+        item.changes.forEach(ch => {
+          if (ch.clouds && ch.clouds.length > 0) {
+            const chCloudStr = formatCloudsArr(ch.clouds);
+            if (chCloudStr !== formatCloudsArr(item.base.clouds)) {
+              effCloudsStr = chCloudStr;
+              const idx = report.fcsts.indexOf(ch) - 1;
+              cloudsClass = `change-color-${idx >= 0 ? idx % 6 : 0}`;
+            }
+          }
+        });
+
+        let wxItems = [];
+        if (item.base.wxString) {
+          wxItems.push({ text: decodeWxString(item.base.wxString), css: '' });
+        }
+        item.changes.forEach(ch => {
+          if (ch.wxString) {
+            const idx = report.fcsts.indexOf(ch) - 1;
+            const probStr = ch.probability ? `PROB${ch.probability} ` : '';
+            const type = ch.fcstChange || 'TEMPO';
+            const tag = `${probStr}${type}`;
+            const colorClass = `change-color-${idx >= 0 ? idx % 6 : 0}`;
+            wxItems.push({
+              text: `<div class="cell-change ${colorClass}"><span class="change-tag">${tag}</span>${decodeWxString(ch.wxString)}</div>`,
+              css: ''
+            });
+          }
+        });
+
+        const windHtml = windClass ? `<div class="cell-change ${windClass}">${effWind}</div>` : effWind;
+        const visHtml = visClass ? `<div class="cell-change ${visClass}">${effVisStr}</div>` : effVisStr;
+        const cloudsHtml = cloudsClass ? `<div class="cell-change ${cloudsClass}">${effCloudsStr}</div>` : effCloudsStr;
+        const wxHtml = wxItems.length > 0 ? wxItems.map(i => i.text).join('') : '--';
+
+        windRow += `<td>${windHtml}</td>`;
+        visibRow += `<td>${visHtml}</td>`;
+        cloudsRow += `<td>${cloudsHtml}</td>`;
+        wxRow += `<td>${wxHtml}</td>`;
       });
 
       windRow += '</tr>';
       visibRow += '</tr>';
       cloudsRow += '</tr>';
       wxRow += '</tr>';
+
+      const temps = parseTxTn(report.rawTAF);
+      let tempHtml = '';
+      if (temps.tx || temps.tn) {
+        tempHtml = `<div class="taf-temps">`;
+        if (temps.tx) tempHtml += `<span class="temp-max">🔥 Máx: ${temps.tx}</span>`;
+        if (temps.tn) tempHtml += `<span class="temp-min">❄️ Mín: ${temps.tn}</span>`;
+        tempHtml += `</div>`;
+      }
 
       const card = document.createElement('div');
       card.className = 'taf-card';
@@ -286,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Válido: ${validFromStr} ➔ ${validToStr}
           </div>
         </div>
-
+        ${tempHtml}
         <div class="taf-body">
           <div class="table-wrapper">
             <table class="taf-table">
