@@ -48,35 +48,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  async function fetchMetarData() {
-    const rawInput = metarInput.value.trim().toUpperCase();
-    if (!rawInput) return;
+async function fetchMetarData() {
+  const rawInput = metarInput.value.trim().toUpperCase();
+  if (!rawInput) return;
 
-    const icaos = rawInput.replace(/\s+/g, '');
-    metarBtn.disabled = true;
-    metarBtn.textContent = 'Consultando...';
+  const icaos = rawInput.replace(/\s+/g, '');
+  metarBtn.disabled = true;
+  metarBtn.textContent = 'Consultando...';
 
-    try {
-     const targetUrl = `https://aviationweather.gov/api/data/metar?ids=${icaos}&format=json`;
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+  try {
+    const targetUrl = `https://aviationweather.gov/api/data/metar?ids=${icaos}&format=json`;
+    const proxyUrl = `https://metar-proxy.abusomfernandez.workers.dev/?url=${encodeURIComponent(targetUrl)}`;
 
-      const response = await fetch(proxyUrl);
-      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-      
-      const data = await response.json();
-      if (!data || data.length === 0) {
-        alert('No se encontraron datos METAR para los códigos ICAO indicados.');
-        return;
-      }
+    const response = await fetch(proxyUrl);
+    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
-      renderMetarCards(data);
-    } catch (error) {
-      alert('Error al consultar AviationWeather: ' + error.message);
-    } finally {
-      metarBtn.disabled = false;
-      metarBtn.textContent = 'Consultar METAR';
+    const data = await response.json();
+    if (!data || data.length === 0) {
+      alert('No se encontraron datos METAR para los códigos ICAO indicados.');
+      return;
     }
+
+    renderMetarCards(data);
+  } catch (error) {
+    alert('Error al consultar AviationWeather: ' + error.message);
+  } finally {
+    metarBtn.disabled = false;
+    metarBtn.textContent = 'Consultar METAR';
   }
+}
 
 
   function decodeWxString(rawWx) {
