@@ -5,38 +5,38 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastTafTimestamp = null;
 
   async function fetchTafData() {
-    const rawInput = tafInput.value.trim().toUpperCase();
-    if (!rawInput) return;
+  const rawInput = tafInput.value.trim().toUpperCase();
+  if (!rawInput) return;
 
-    const icaos = rawInput.replace(/\s+/g, '');
-    tafBtn.disabled = true;
-    tafBtn.textContent = 'Consultando...';
+  const icaos = rawInput.replace(/\s+/g, '');
+  tafBtn.disabled = true;
+  tafBtn.textContent = 'Consultando...';
 
-    try {
-      const targetUrl = `https://aviationweather.gov/api/data/taf?ids=${icaos}&format=json`;
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+  try {
+    const targetUrl = `https://aviationweather.gov/api/data/taf?ids=${icaos}&format=json`;
+    const proxyUrl = `https://metar-proxy.abusomfernandez.workers.dev/?url=${encodeURIComponent(targetUrl)}`;
 
-      const response = await fetch(proxyUrl);
+    const response = await fetch(proxyUrl);
 
-      if (!response.ok) {
-        throw new Error(`Error HTTP ${response.status}`);
-      }
-
-      const parsed = await response.json();
-
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        alert('No se encontraron datos TAF para los códigos ICAO indicados.');
-        return;
-      }
-
-      renderTafCards(parsed);
-    } catch (error) {
-      alert('Error al consultar TAF: ' + error.message);
-    } finally {
-      tafBtn.disabled = false;
-      tafBtn.textContent = 'Consultar TAF';
+    if (!response.ok) {
+      throw new Error(`Error HTTP ${response.status}`);
     }
+
+    const parsed = await response.json();
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      alert('No se encontraron datos TAF para los códigos ICAO indicados.');
+      return;
+    }
+
+    renderTafCards(parsed);
+  } catch (error) {
+    alert('Error al consultar TAF: ' + error.message);
+  } finally {
+    tafBtn.disabled = false;
+    tafBtn.textContent = 'Consultar TAF';
   }
+}
 
   function formatUtcTimestamp(seconds) {
     if (!seconds) return '--:--';
