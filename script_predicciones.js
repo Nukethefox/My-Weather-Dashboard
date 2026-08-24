@@ -16,36 +16,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const MODELS_CONFIG = {
     peninsula: [
       { id: 'ecmwf', name: 'ECMWF 9KM', runInterval: 6, delayHours: 6, maxHour: 360, step: 1 },
-      { id: 'icon_eu', name: 'ICON-EU', runInterval: 3, delayHours: 3, maxHour: 120, step: 1 },
-      { id: 'ukmo_hd', name: 'UKMO HD', runInterval: 6, delayHours: 6, maxHour: 144, step: 1 },
+      { id: 'icon_eu', name: 'ICON-EU', runInterval: 3, delayHours: 2, maxHour: 120, step: 1 },
+      { id: 'ukmo_hd', name: 'UKMO HD', runInterval: 6, delayHours: 3, maxHour: 144, step: 1 },
       { id: 'arome', name: 'AROME 1.3KM', runInterval: 6, delayHours: 6, maxHour: 42, step: 1 },
       { id: 'arome25', name: 'AROME 2.5KM', runInterval: 6, delayHours: 6, maxHour: 42, step: 1 },
       { id: 'wrf', name: 'WRF 2KM', runInterval: 6, delayHours: 6, maxHour: 36, step: 1 },
       { id: 'gfs', name: 'GFS', runInterval: 6, delayHours: 6, maxHour: 240, step: 3 },
-      { id: 'arpege', name: 'ARPEGE', runInterval: 6, delayHours: 6, maxHour: 114, step: 1 }
+      { id: 'arpege', name: 'ARPEGE', runInterval: 6, delayHours: 3, maxHour: 114, step: 1 }
     ],
     europa: [
       { id: 'ecmwf_eu', name: 'ECMWF Europa', runInterval: 6, delayHours: 6, maxHour: 360, step: 3 },
-      { id: 'icon_eu_eu', name: 'ICON-EU Europa', runInterval: 6, delayHours: 3, maxHour: 120, step: 1 },
+      { id: 'gfs_eu', name: 'GFS Europa', runInterval: 6, delayHours: 6, maxHour: 192, step: 6 },
       { id: 'ukmo_eu', name: 'UKMO Europa', runInterval: 12, delayHours: 6, maxHour: 168, step: 12 },
-      { id: 'gfs_eu', name: 'GFS Europa', runInterval: 6, delayHours: 6, maxHour: 192, step: 6 }
+      { id: 'arpege_eu', name: 'ARPEGE Europa', runInterval: 6, delayHours: 3, maxHour: 114, step: 3 },
+      { id: 'wrf_eu', name: 'WRF Europa', runInterval: 6, delayHours: 6, maxHour: 120, step: 1 },
+      { id: 'icon_eu_eu', name: 'ICON-EU Europa', runInterval: 3, delayHours: 2, maxHour: 120, step: 1 }
     ]
   };
 
   const PRODUCTS_MAP = {
     arome: { precip: '1', precip_acc: '25', clouds: '54', t2m: '0', wind10m: '3', gust10m: '11', cape: '28' },
-    arome25: { t850: '16', t500: '21', geop500: '2', wind700_850: '35', wind900: '8' },
-    wrf: { precip: '1', precip_acc: '25', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28' },
+    arome25: { t850: '16', t500: '21', agua_precip: '46', geop500: '2', wind700_850: '35', wind900: '8' },
+    wrf: { precip: '1', precip_acc: '25', agua_precip: '46', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28' },
     ukmo_hd: { precip: '1', precip_acc: '25', clouds: '4', t2m: '40', t850: '16', t500: '21', wind10m: '3', gust10m: '11', geop500: '2' },
-    arpege: { precip: '1', precip_acc: '25', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28' },
+    arpege: { precip: '1', precip_acc: '25', agua_precip: '46', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28' },
     gfs: { precip: '574', precip_acc: '777', clouds: '562', t2m: '580', t850: '7', t500: '21', wind10m: '602', gust10m: '289', wind700_850: '314', wind900: '104', geop500: '21', cape: '109' },
-    ecmwf: { precip: '2', precip_acc: '25', clouds: '35', t2m: '19', t850: '1', t500: '13', wind10m: '14', gust10m: '27', wind700_850: '6', wind900: '10', geop500: '0', cape: '11' },
+    ecmwf: { precip: '2', precip_acc: '25', agua_precip: '26', clouds: '35', t2m: '19', t850: '1', t500: '13', wind10m: '14', gust10m: '27', wind700_850: '6', wind900: '10', geop500: '0', cape: '11' },
     icon_eu: { precip: '1', precip_acc: '25', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '34', wind900: '33', geop500: '2', cape: '28' },
 
-    ecmwf_eu: { precip: '2', t2m: '9', t850: '1', t500: '13', wind10m: '14', gust10m: '27', wind700_850: '6', jetstream: '5', geop500: '0' },
-    icon_eu_eu: { precip: '1', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '34', geop500: '2', cape: '28' },
-    gfs_eu: { precip: '2', t2m: '9', t850: '1', t500: '13', wind10m: '14', jetstream: '5', geop500: '0', cape: '11' },
-    ukmo_eu: { precip: '2', t850: '1', t500: '13', geop500: '0' }
+    ecmwf_eu: { anom850: '15', precip: '2', t2m: '9', t850: '1', clouds: '35', precip_acc: '25', agua_precip: '26', t500: '13', wind10m: '14', wind700_850: '6', jetstream: '5', geop500: '0' },
+    gfs_eu: { anom850: '15', precip: '2', t2m: '9', t850: '1', t500: '13', precip_acc: '25', wind10m: '14', jetstream: '5', geop500: '0', cape: '11' },
+    ukmo_eu: { precip: '2', t850: '1', t500: '13', geop500: '0' },
+    arpege_eu: { jetstream: '5', cape: '11', precip_acc: '25', wind10m: '14', geop500: '13', anom850: '15', t850: '1', t2m: '9', precip: '2'},
+    icon_eu_eu: { precip: '1', t2m: '0', t850: '16', clouds: '4', t500: '21', precip_acc: '25', wind10m: '3', gust10m: '11', wind700_850: '34', geop500: '2', cape: '28' },
+    wrf_eu: { precip: '2', t2m: '0', t850: '16', clouds: '4', t500: '21', precip_acc: '25', agua_precip: '46', wind10m: '14', jetstream: '9', geop500: '2', cape: '28', wind700_850: '35', gust10m: '11', wind10m: '3', precip: '1',}
   };
 
   function getModelLimitDate(modelLimitHours, runHourUtc) {
@@ -181,8 +185,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isUkmoToArome = prevId.startsWith('ukmo') && currId.startsWith('arome');
         const isWrfToGfs = prevId === 'wrf' && currId === 'gfs';
+        const isArpegeToIcon = prevId === 'arpege_eu' && currId === 'icon_eu_eu';
 
-        if (isUkmoToArome || isWrfToGfs) {
+        if (isUkmoToArome || isWrfToGfs || isArpegeToIcon) {
           const separator = document.createElement('span');
           separator.className = 'model-separator';
           modelSelectorButtons.appendChild(separator);
@@ -241,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const textInfo = document.getElementById('models-limit-info');
       if (textInfo) {
-        textInfo.textContent = `Todos los modelos están disponibles hasta ${minLimitText}`;
+        textInfo.textContent = `Todos los modelos disponibles hasta ${minLimitText}`;
       }
     }
     updateModelButtonsState();
@@ -287,7 +292,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (modelId === 'icon_eu') {
       if (targetForecastHour > 78) currentStep = 3;
     } else if (modelId === 'ecmwf_eu') {
-      if (targetForecastHour > 144) currentStep = 6;
+      if (productKey === 'anom850') currentStep = 6;
+      else if (targetForecastHour > 144) currentStep = 6;
       else currentStep = 3;
     } else if (modelId === 'icon_eu_eu') {
       if (targetForecastHour > 78) currentStep = 3;
@@ -335,6 +341,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (modelId === 'gfs_eu') {
       return `https://modeles16.meteociel.fr/modeles/gfs/runs/${runStr}/gfs-${productCode}-${targetForecastHour}.png`;
+    }
+    if (modelId === 'wrf_eu') {
+      return `https://modeles16.meteociel.fr/modeles/wrfnmm-eur/runs/${runStr}/nmm-${productCode}-${targetForecastHour}-0.png`;
+    }
+    if (modelId === 'arpege_eu') {
+      return `https://modeles7.meteociel.fr/modeles/arpege/runs/${runStr}/arpegeeur-${productCode}-${targetForecastHour}.png`;
     }
     if (modelId === 'ukmo_eu') {
       return `https://modeles14.meteociel.fr/modeles/ukmo/runs/${runStr}/ukmo-${productCode}-${targetForecastHour}.png`;
