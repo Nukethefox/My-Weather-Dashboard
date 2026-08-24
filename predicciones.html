@@ -23,25 +23,27 @@
         </select>
       </div>
       <div class="panel-group">
-        <label>Modelos a comparar:</label>
+        <label>Modelos a comparar: <br>(*Si alguna imágen no carga, normalmente basta con seleccionar la hora anterior del desplegable)</label>
         <div id="models-container" class="checkbox-group"></div>
       </div>
       <div class="panel-group">
         <label>Producto / Variable:</label>
         <select id="product-select">
           <option value="precip">Precipitaciones</option>
-          <option value="precip_acc">Precipitación acumulada (solo península)</option>
-          <option value="clouds">Nubosidad (solo península)</option>
+          <option value="precip_acc">Precipitación acumulada</option>
+          <option value="agua_precip">Agua precipitable</option>
+          <option value="clouds">Nubosidad</option>
           <option value="t2m">Temperatura 2m</option>
-          <option value="t850">Temperatura 850hPa</option>
-          <option value="t500">Temperatura 500hPa</option>
+          <option value="t850">Temperatura 850hPa (≈1500m)</option>
+          <option value="t500">Temperatura 500hPa (≈5500m)</option>
           <option value="wind10m">Viento medio 10m</option>
           <option value="gust10m">Rachas 10m</option>
-          <option value="wind700_850">Viento 700-850hPa</option>
-          <option id="opt-wind900" value="wind900">Viento 900hPa</option>
-          <option id="opt-jetstream" value="jetstream" style="display: none;">JetStream 300hPa</option>
-          <option value="geop500">Geopotencial 500hPa</option>
+          <option value="wind700_850">Viento 700-850hPa (≈1500-3000m)</option>
+          <option id="opt-wind900" value="wind900">Viento 900hPa (≈990m)</option>
+          <option id="opt-jetstream" value="jetstream" style="display: none;">JetStream 300hPa (≈9000m)</option>
+          <option value="geop500">Presión y geopotencial 500hPa (≈5500m)</option>
           <option value="cape">CAPE</option>
+          <option value="anom850">Anomalía Temp 850hPa (solo Europa)</option>
         </select>
       </div>
       <div class="panel-group">
