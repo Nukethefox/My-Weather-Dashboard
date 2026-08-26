@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: 'ecmwf', name: 'ECMWF 9KM', runInterval: 6, delayHours: 6, maxHour: 360, step: 1 },
       { id: 'icon_eu', name: 'ICON-EU', runInterval: 3, delayHours: 2, maxHour: 120, step: 1 },
       { id: 'ukmo_hd', name: 'UKMO HD', runInterval: 6, delayHours: 3, maxHour: 144, step: 1 },
-      { id: 'arome', name: 'AROME 1.3KM', runInterval: 6, delayHours: 6, maxHour: 42, step: 1 },
-      { id: 'arome25', name: 'AROME 2.5KM', runInterval: 6, delayHours: 6, maxHour: 42, step: 1 },
+      { id: 'arome', name: 'AROME 1.3KM', runInterval: 6, delayHours: 3, maxHour: 42, step: 1 },
+      { id: 'arome25', name: 'AROME 2.5KM', runInterval: 6, delayHours: 3, maxHour: 42, step: 1 },
       { id: 'wrf', name: 'WRF 2KM', runInterval: 6, delayHours: 6, maxHour: 36, step: 1 },
       { id: 'gfs', name: 'GFS', runInterval: 6, delayHours: 6, maxHour: 240, step: 3 },
       { id: 'arpege', name: 'ARPEGE', runInterval: 6, delayHours: 3, maxHour: 114, step: 1 }
