@@ -9,8 +9,8 @@
 </head>
 <body>
   <nav class="main-nav">
-    <a href="index.html" class="nav-btn active">Observaciones</a>
-    <a href="predicciones.html" class="nav-btn">Predicciones</a>
+    <a href="index.html" class="nav-btn active">Observaciones y datos actuales</a>
+    <a href="predicciones.html" class="nav-btn">Predicciones (deterministas)</a>
     <a href="aviation.html" class="nav-btn">Predicciones aeronáuticas</a>
   </nav>
   <main class="content-container-2">
@@ -32,9 +32,11 @@
           <option value="sst">Temperatura del mar</option>
         </select>
       </div>
-      <p style="color: #b0b0b0;">Datos reales recogidos por estaciones meteorológicas</p>
+      <p style="color: #b0b0b0; text-align: center;">Datos reales recogidos por estaciones meteorológicas (excepto temperatura del mar, que es calculado). Haz clic para ver detalles de cada punto.</p>
       <div class="image-wrapper">
-        <img id="obs-image" src="https://www.meteociel.fr/cartes_obs/temp2_sp_1h.png" alt="Mapa de observación meteorológica">
+        <a id="obs-link" href="https://www.meteociel.fr/observations-meteo/temps-reel.php?region=sp" target="_blank" rel="noopener noreferrer">
+          <img id="obs-image" src="https://www.meteociel.fr/cartes_obs/temp2_sp_1h.png" alt="Mapa de observación meteorológica">
+        </a>
       </div>
     </section>
     <section class="obs-section">
@@ -49,7 +51,7 @@
     <section class="obs-section">
       <div class="sat-controls">
         <select id="sat-region">
-          <option value="sp" selected>España</option>
+          <option value="sp" selected>Península Ibérica</option>
           <option value="eu">Europa</option>
           <option value="alt">Atlántico</option>
         </select>
