@@ -9,11 +9,13 @@
 </head>
 <body>
   <nav class="main-nav">
-    <a href="index.html" class="nav-btn">Observaciones</a>
-    <a href="predicciones.html" class="nav-btn active">Predicciones</a>
+    <a href="index.html" class="nav-btn">Observaciones y datos actuales</a>
+    <a href="predicciones.html" class="nav-btn active">Predicciones (deterministas)</a>
     <a href="aviation.html" class="nav-btn">Predicciones aeronáuticas</a>
   </nav>
   <main class="content-container">
+    <button id="openMeteogramBtn" style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;">¡Abre el Meteograma!</button>
+    <button id="models-comparasion" style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;">¡Abre el Comparador de modelos!</button>
     <div class="control-panel-main">
       <div class="panel-group">
         <label>Región:</label>
@@ -23,11 +25,11 @@
         </select>
       </div>
       <div class="panel-group">
-        <label>Modelos a comparar: <br>(*Si alguna imágen no carga, normalmente basta con seleccionar la hora anterior del desplegable)</label>
+        <label>*Si algún modelo no carga, normalmente solo hay seleccionar la hora de salida anterior del desplegable</label>
         <div id="models-container" class="checkbox-group"></div>
       </div>
       <div class="panel-group">
-        <label>Producto / Variable:</label>
+        <label>Producto:</label>
         <select id="product-select">
           <option value="precip">Precipitaciones</option>
           <option value="precip_acc">Precipitación acumulada</option>
@@ -47,32 +49,43 @@
         </select>
       </div>
       <div class="panel-group">
-        <label></label>
-        <button id="preload-btn" type="button">Precargar imágenes</button>
+        <p style="font-size: 0.85rem; color: #aaa;">INFO:</p>
+        <span id="models-limit-info" class="models-limit-info"></span>
       </div>
     </div>
     <div class="panel-group time-nav">
-      <div>
-        <button id="prev-time-btn">‹ Hora Anterior</button>
-        <span id="forecast-hour-label">Pronóstico: +0h</span>
-        <button id="next-time-btn">Hora Siguiente ›</button>
-        <button id="openMeteogramBtn" style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer;">¡Abre el meteograma!</button>
-        <input type="datetime-local" id="date-picker-select" class="date-picker-input">
-      </div>
       <div id="model-selector-buttons"></div>
-      <span id="models-limit-info" class="models-limit-info"></span>
+      <div class="time-btn-container">
+        <button id="minus12-time-btn">‹ -6h</button>
+        <button id="prev-time-btn">‹ -1h</button>
+        <span id="forecast-hour-label">Pronóstico: +0h</span>
+        <button id="next-time-btn">+1h ›</button>
+        <button id="plus12-time-btn">+6h ›</button>
       </div>
+      <div class="time-picker-row">
+        <input type="datetime-local" id="date-picker-select" class="date-picker-input">
+        <div class="slider-wrapper">
+          <input type="range" id="hour-picker-slider" min="0" max="239" step="1" value="0" list="slider-ticks">
+          <datalist id="slider-ticks"></datalist>
+          <div id="slider-ticks-labels" class="ticks-labels-container"></div>
+        </div>
+      </div>
+    </div>
     <div id="images-display-container" class="images-container"></div>
   </main>
   <footer class="main-footer">
-    <p>Datos de <a href="https://www.meteociel.fr/index.php?region=sp" target="_blank" rel="noopener">Meteociel.fr</a></p>
+    <p>Mapas de <a href="https://www.meteociel.fr/index.php?region=sp" target="_blank" rel="noopener">Meteociel.fr</a>, meteograma y comparador de <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo</a></p>
   </footer>
   <div id="meteogramModal" class="meteogram-modal hidden">
   <div class="meteogram-modal-content">
     <div class="meteogram-header">
       <div class="meteogram-controls">
+        <select id="meteogram-mode">
+            <option value="MeteoGraph">Diagrama</option>
+            <option value="MeteoTable">Tabla detallada</option>
+        </select>
         <button id="useLocationBtn" title="Usar mi ubicación actual">Usar ubicación actual</button>
-        <input type="text" id="citySearchInput" placeholder="Escribe ciudad o Lat,Lon" />
+        <input type="text" id="citySearchInput" placeholder="Ciudad o Lat,Lon" />
         <button id="fetchMeteogramBtn">← Buscar ubicación / Refrescar modelo →</button>
         <select id="meteogramModelSelect">
           <option value="ecmwf_ifs&forecast_days=10">ECMWF</option>
@@ -86,9 +99,39 @@
     </div>
     <div id="meteogramLoading" class="meteogram-loading hidden">Cargando datos...</div>
     <div class="meteogram-scroll-container">
+      <div id="meteogramChartWrapper" class="meteogram-chart-container hidden">
+        <canvas id="meteogramChart"></canvas>
+      </div>
       <table id="meteogramTable" class="meteogram-table">
         <thead id="meteogramTableHead"></thead>
         <tbody id="meteogramTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div id="modelCompareModal" class="meteogram-modal hidden">
+  <div class="meteogram-modal-content">
+    <div class="meteogram-header">
+      <div class="meteogram-controls">
+        <button id="compareUseLocationBtn" title="Usar mi ubicación actual">Usar ubicación actual</button>
+        <input type="text" id="compareCitySearchInput" placeholder="Ciudad o Lat,Lon" />
+        <button id="fetchCompareBtn">← Buscar ubicación / Refrescar →</button>
+        <select id="compareVariableSelect">
+          <option value="temperature_2m">Temperatura 2m (°C)</option>
+          <option value="precipitation">Precipitación (mm)</option>
+          <option value="wind_speed_10m">Viento (km/h)</option>
+          <option value="wind_gusts_10m">Rachas de viento (km/h)</option>
+          <option value="cloud_cover">Nubosidad (%)</option>
+          <option value="dew_point_2m">Punto de rocío (°C)</option>
+        </select>
+      </div>
+      <button id="closeCompareBtn" class="close-btn">&times;</button>
+    </div>
+    <div id="compareLoading" class="meteogram-loading hidden">Cargando datos de todos los modelos...</div>
+    <div class="meteogram-scroll-container">
+      <table id="compareTable" class="meteogram-table">
+        <thead id="compareTableHead"></thead>
+        <tbody id="compareTableBody"></tbody>
       </table>
     </div>
   </div>
