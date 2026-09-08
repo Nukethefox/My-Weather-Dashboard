@@ -4,12 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const productSelect = document.getElementById('product-select');
   const prevTimeBtn = document.getElementById('prev-time-btn');
   const nextTimeBtn = document.getElementById('next-time-btn');
+  const minus12TimeBtn = document.getElementById('minus12-time-btn');
+  const plus12TimeBtn = document.getElementById('plus12-time-btn');
   const forecastHourLabel = document.getElementById('forecast-hour-label');
   const imagesDisplayContainer = document.getElementById('images-display-container');
-  const preloadBtn = document.getElementById('preload-btn');
   const modelSelectorButtons = document.getElementById('model-selector-buttons');
   let activeModelId = null;
   const datePickerSelect = document.getElementById('date-picker-select');
+  const hourPickerSlider = document.getElementById('hour-picker-slider');
+  const sliderTicksLabels = document.getElementById('slider-ticks-labels');
 
   let offsetFromNow = 1;
 
@@ -27,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     europa: [
       { id: 'ecmwf_eu', name: 'ECMWF Europa', runInterval: 6, delayHours: 6, maxHour: 360, step: 3 },
       { id: 'gfs_eu', name: 'GFS Europa', runInterval: 6, delayHours: 6, maxHour: 192, step: 6 },
-      { id: 'ukmo_eu', name: 'UKMO Europa', runInterval: 12, delayHours: 6, maxHour: 168, step: 12 },
+      { id: 'ukmo_eu', name: 'UKMO Europa', runInterval: 12, delayHours: 3, maxHour: 168, step: 12 },
       { id: 'arpege_eu', name: 'ARPEGE Europa', runInterval: 6, delayHours: 3, maxHour: 114, step: 3 },
       { id: 'wrf_eu', name: 'WRF Europa', runInterval: 6, delayHours: 6, maxHour: 120, step: 1 },
       { id: 'icon_eu_eu', name: 'ICON-EU Europa', runInterval: 3, delayHours: 2, maxHour: 120, step: 1 }
@@ -246,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const textInfo = document.getElementById('models-limit-info');
       if (textInfo) {
-        textInfo.textContent = `Todos los modelos disponibles hasta ${minLimitText}`;
+        textInfo.textContent = `Todos los modelos están disponibles hasta ${minLimitText}`;
       }
     }
     updateModelButtonsState();
@@ -355,6 +358,26 @@ document.addEventListener('DOMContentLoaded', () => {
     return null;
   }
 
+  function syncControlInputs() {
+    if (hourPickerSlider) {
+      const sliderVal = Math.max(0, Math.min(239, offsetFromNow - 1));
+      hourPickerSlider.value = sliderVal;
+    }
+
+    if (datePickerSelect) {
+      const targetDate = new Date();
+      targetDate.setHours(targetDate.getHours() + offsetFromNow);
+      targetDate.setMinutes(0, 0, 0);
+
+      const year = targetDate.getFullYear();
+      const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+      const day = String(targetDate.getDate()).padStart(2, '0');
+      const hours = String(targetDate.getHours()).padStart(2, '0');
+
+      datePickerSelect.value = `${year}-${month}-${day}T${hours}:00`;
+    }
+  }
+
   function updateImages() {
     const region = regionSelect.value;
     const models = MODELS_CONFIG[region] || [];
@@ -366,9 +389,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const day = targetDate.getDate();
     const month = targetDate.getMonth() + 1;
     const localHours = String(targetDate.getHours()).padStart(2, '0');
-    const localMinutes = String(targetDate.getMinutes()).padStart(2, '0');
-    forecastHourLabel.textContent = `Ahora ${sign}${offsetFromNow}h (Imágen más cercana a: ${day}/${month} ${localHours}h)`;
+    forecastHourLabel.textContent = `Ahora ${sign}${offsetFromNow}h (${day}/${month} ${localHours}h)`;
 
+    syncControlInputs();
     updateModelButtonsState();
 
     if (!activeModelId) {
@@ -421,63 +444,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function preloadImages() {
-    preloadBtn.disabled = true;
-    preloadBtn.textContent = 'Cargando...';
-
-    const region = regionSelect.value;
-    const models = MODELS_CONFIG[region] || [];
-    const selectedProduct = productSelect.value;
-    
-    const originalOffset = offsetFromNow;
-    const urlsToPreload = [];
-
-    for (let h = 0; h <= 24; h++) {
-      offsetFromNow = originalOffset + h;
-
-      models.forEach(model => {
-        const runSelect = document.getElementById(`run-${model.id}`);
-        const selectedRun = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
-        const imgUrl = buildImageUrl(model.id, selectedRun, selectedProduct, model);
-
-        if (imgUrl && !urlsToPreload.includes(imgUrl)) {
-          urlsToPreload.push(imgUrl);
-        }
-      });
-    }
-
-    offsetFromNow = originalOffset;
-
-    let loadedCount = 0;
-    if (urlsToPreload.length === 0) {
-      preloadBtn.disabled = false;
-      preloadBtn.textContent = 'Precargar serie';
-      return;
-    }
-
-    urlsToPreload.forEach(url => {
-      const img = new Image();
-      img.onload = img.onerror = () => {
-        loadedCount++;
-        if (loadedCount === urlsToPreload.length) {
-          preloadBtn.disabled = false;
-          preloadBtn.textContent = 'Serie Lista ✓';
-          setTimeout(() => {
-            preloadBtn.textContent = 'Precargar serie';
-          }, 3000);
-        }
-      };
-      img.src = url;
-    });
-  }
-
-  preloadBtn.addEventListener('click', preloadImages);
-
   regionSelect.addEventListener('change', renderModelCheckboxes);
   productSelect.addEventListener('change', () => {
     renderModelButtons();
     updateImages();
   });
+
+  function buildSliderTicks() {
+    if (!sliderTicksLabels) return;
+    sliderTicksLabels.innerHTML = '';
+
+    const baseDate = new Date();
+    baseDate.setHours(baseDate.getHours() + 1, 0, 0, 0);
+
+    for (let step = 0; step < 240; step++) {
+      const tickDate = new Date(baseDate.getTime() + step * 60 * 60 * 1000);
+
+      if (tickDate.getHours() === 0) {
+        const percent = (step / 239) * 100;
+        const label = document.createElement('span');
+        label.className = 'tick-label';
+        label.style.left = `${percent}%`;
+        label.textContent = `${tickDate.getDate()}/${tickDate.getMonth() + 1}`;
+        sliderTicksLabels.appendChild(label);
+      }
+    }
+  }
 
   prevTimeBtn.addEventListener('click', () => {
     offsetFromNow -= 1;
@@ -489,9 +481,52 @@ document.addEventListener('DOMContentLoaded', () => {
     updateImages();
   });
 
+  if (minus12TimeBtn) {
+    minus12TimeBtn.addEventListener('click', () => {
+      offsetFromNow -= 6;
+      updateImages();
+    });
+  }
+
+  if (plus12TimeBtn) {
+    plus12TimeBtn.addEventListener('click', () => {
+      offsetFromNow += 6;
+      updateImages();
+    });
+  }
+
+  if (hourPickerSlider) {
+    hourPickerSlider.addEventListener('input', (e) => {
+      const stepVal = parseInt(e.target.value, 10);
+      offsetFromNow = stepVal + 1;
+      updateImages();
+    });
+  }
+
+  if (datePickerSelect) {
+    datePickerSelect.addEventListener('change', () => {
+      if (!datePickerSelect.value) return;
+
+      const selectedDate = new Date(datePickerSelect.value);
+      selectedDate.setMinutes(0, 0, 0);
+
+      const now = new Date();
+      now.setMinutes(0, 0, 0);
+
+      const diffMs = selectedDate.getTime() - now.getTime();
+      offsetFromNow = Math.round(diffMs / (1000 * 60 * 60));
+
+      updateImages();
+    });
+  }
+
+  buildSliderTicks();
+
   renderModelCheckboxes();
 
+  let lastMeteogramData = null;
   let meteogramChartInstance = null;
+
 
 const wmoIconMap = {
   0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
@@ -517,7 +552,9 @@ async function fetchMeteogramForCoords(latitude, longitude, locationName = '') {
   loadingEl.classList.remove('hidden');
 
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,dew_point_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_850hPa,cloud_cover,weather_code&models=${modelParam}&cell_selection=nearest&timezone=auto`;
+const [modelName, extraParams] = modelParam.split('&');
+    let url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&hourly=temperature_2m,dew_point_2m,apparent_temperature,precipitation,wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_850hPa,cloud_cover,weather_code&models=${modelName}&cell_selection=nearest&timezone=auto`;
+    if (extraParams) url += `&${extraParams}`;
 
     const weatherRes = await fetch(url);
     const weatherData = await weatherRes.json();
@@ -584,7 +621,167 @@ document.getElementById('useLocationBtn').addEventListener('click', () => {
   );
 });
 
+
+function renderMeteogramChart(data) {
+  const ctx = document.getElementById('meteogramChart')?.getContext('2d');
+  if (!ctx) return;
+
+  if (meteogramChartInstance) {
+    meteogramChartInstance.destroy();
+  }
+
+  const hourly = data.hourly;
+  const labels = hourly.time.map(t => {
+    const d = new Date(t);
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
+    const hours = String(d.getHours()).padStart(2, '0');
+    const timeStr = `${hours}:00`;
+
+    if (timeStr === '00:00') {
+      return `${day}/${month} 00:00`;
+    }
+    return `${day}/${month} ${timeStr}`;
+  });
+
+  const weatherIconsPlugin = {
+    id: 'weatherIcons',
+    afterDraw: (chart) => {
+      const { ctx, chartArea: { left, right }, scales: { x } } = chart;
+      ctx.save();
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      
+      hourly.weather_code.forEach((code, index) => {
+        const xPos = x.getPixelForValue(index);
+        if (xPos >= left && xPos <= right) {
+          const icon = wmoIconMap[code] || '❓';
+          ctx.fillText(icon, xPos, 20);
+        }
+      });
+      ctx.restore();
+    }
+  };
+
+  const totalHours = data.hourly.time.length;
+  const chartContainer = document.getElementById('meteogramChartWrapper');
+  const canvas = document.getElementById('meteogramChart');
+
+  if (chartContainer && canvas) {
+    const pxPerHour = 20;
+    const fixedHeight = 500;
+    const computedWidth = totalHours * pxPerHour;
+
+    chartContainer.style.width = `${computedWidth}px`;
+    chartContainer.style.height = `${fixedHeight}px`;
+
+    canvas.removeAttribute('width');
+    canvas.removeAttribute('height');
+
+    canvas.style.width = `${computedWidth}px`;
+    canvas.style.height = `${fixedHeight}px`;
+    canvas.width = computedWidth;
+    canvas.height = fixedHeight;
+  }
+
+  meteogramChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Precipitación (mm)',
+          data: hourly.precipitation,
+          backgroundColor: 'rgba(56, 189, 248, 0.6)',
+          borderColor: '#38bdf8',
+          borderWidth: 1,
+          yAxisID: 'yPrecip',
+          type: 'bar'
+        },
+        {
+          label: 'Temperatura 2m (°C)',
+          data: hourly.temperature_2m,
+          borderColor: '#ef4444',
+          backgroundColor: '#ef4444',
+          borderWidth: 2,
+          pointRadius: 2,
+          tension: 0.3,
+          yAxisID: 'yTemp',
+          type: 'line'
+        }
+      ]
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      layout: {
+        padding: { top: 30 }
+      },
+      scales: {
+        x: {
+          ticks: { 
+            color: '#94a3b8',
+            autoSkip: false
+          },
+          grid: {
+            color: (context) => {
+              const label = context.chart.data.labels[context.index];
+              if (label && label.includes('00:00')) {
+                return 'rgba(0, 212, 255, 0.6)';
+              }
+              return 'rgba(255, 255, 255, 0.05)';
+            },
+            lineWidth: (context) => {
+              const label = context.chart.data.labels[context.index];
+              return label && label.includes('00:00') ? 1.5 : 1;
+            }
+          }
+        },
+        yTemp: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: 'Temperatura 2m (°C)', color: '#ef4444' },
+          ticks: { color: '#ef4444' },
+          grid: { color: '#334155' }
+        },
+        yPrecip: {
+          type: 'linear',
+          position: 'right',
+          beginAtZero: true,
+          title: { display: true, text: 'Precipitación (mm)', color: '#38bdf8' },
+          ticks: { color: '#38bdf8' },
+          grid: { drawOnChartArea: false }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: { color: '#f8fafc' }
+        }
+      }
+    },
+    plugins: [weatherIconsPlugin]
+  });
+}
+
+function updateMeteogramView() {
+  const mode = document.getElementById('meteogram-mode').value;
+  const chartWrapper = document.getElementById('meteogramChartWrapper');
+  const table = document.getElementById('meteogramTable');
+
+  if (mode === 'MeteoGraph') {
+    chartWrapper.classList.remove('hidden');
+    table.classList.add('hidden');
+    if (lastMeteogramData) renderMeteogramChart(lastMeteogramData);
+  } else {
+    chartWrapper.classList.add('hidden');
+    table.classList.remove('hidden');
+  }
+}
+
+document.getElementById('meteogram-mode').addEventListener('change', updateMeteogramView);
+
 function renderMeteogram(data) {
+  lastMeteogramData = data;
   const hourly = data.hourly;
   const daily = data.daily;
 
@@ -711,55 +908,522 @@ function renderMeteogram(data) {
     tr.innerHTML = html;
     tBody.appendChild(tr);
   });
+
+  updateMeteogramView();
 }
 
-datePickerSelect.addEventListener('change', () => {
-    if (!datePickerSelect.value) return;
-
-    const selectedDate = new Date(datePickerSelect.value);
-    selectedDate.setMinutes(0, 0, 0);
-
-    const now = new Date();
-    now.setMinutes(0, 0, 0);
-
-    const diffMs = selectedDate.getTime() - now.getTime();
-    offsetFromNow = Math.round(diffMs / (1000 * 60 * 60));
-
-    updateImages();
-  });
-
   function updateModelButtonsState() {
-    const modelButtons = document.querySelectorAll('.model-select-btn');
-    const region = regionSelect.value;
-    const models = MODELS_CONFIG[region] || [];
+  const modelButtons = document.querySelectorAll('.model-select-btn');
+  const region = regionSelect.value;
+  const models = MODELS_CONFIG[region] || [];
 
-    const targetDate = new Date();
-    targetDate.setHours(targetDate.getHours() + offsetFromNow);
+  const targetDate = new Date();
+  targetDate.setHours(targetDate.getHours() + offsetFromNow);
 
-    modelButtons.forEach(btn => {
-      const modelId = btn.getAttribute('data-model-id');
-      const model = models.find(m => m.id === modelId);
+  modelButtons.forEach(btn => {
+    const modelId = btn.getAttribute('data-model-id');
+    const model = models.find(m => m.id === modelId);
 
-      if (model) {
-        const runSelect = document.getElementById(`run-${model.id}`);
-        const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
-        const runHourUtc = parseInt(selectedRunStr.substring(8, 10), 10);
+    if (model) {
+      const runSelect = document.getElementById(`run-${model.id}`);
+      const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
+      const runHourUtc = parseInt(selectedRunStr.substring(8, 10), 10);
 
-        const now = new Date();
-        const currentUtcHour = now.getUTCHours() + (now.getUTCMinutes() / 60);
-        let elapsedSinceRun = currentUtcHour - runHourUtc;
-        if (elapsedSinceRun < 0) elapsedSinceRun += 24;
+      const now = new Date();
+      const currentUtcHour = now.getUTCHours() + (now.getUTCMinutes() / 60);
+      let elapsedSinceRun = currentUtcHour - runHourUtc;
+      if (elapsedSinceRun < 0) elapsedSinceRun += 24;
 
-        const remainingHours = model.maxHour - elapsedSinceRun;
-        const limitDate = new Date(now.getTime() + remainingHours * 60 * 60 * 1000);
+      const remainingHours = model.maxHour - elapsedSinceRun;
+      const limitDate = new Date(now.getTime() + remainingHours * 60 * 60 * 1000);
 
-        if (targetDate > limitDate) {
-          btn.classList.add('disabled-model');
-        } else {
-          btn.classList.remove('disabled-model');
-        }
+      const warningThresholdMs = 3 * 60 * 60 * 1000;
+
+      btn.classList.remove('disabled-model', 'warning-model');
+
+      if (targetDate > limitDate) {
+        btn.classList.add('disabled-model');
+      } else if (limitDate.getTime() - targetDate.getTime() <= warningThresholdMs) {
+        btn.classList.add('warning-model');
       }
+    }
+  });
+}
+
+});
+
+function getAverageColorStyle(variable, val) {
+  if (val === null || val === undefined) return '';
+
+  if (variable === 'wind_speed_10m') {
+    if (val >= 75) return 'background-color: #000000; color: #ffffff;';
+    if (val >= 62) return 'background-color: #ff0000; color: #ffffff;';
+    if (val >= 51) return 'background-color: #f87171; color: #000000;';
+    if (val >= 40) return 'background-color: #fb923c; color: #000000;';
+    if (val >= 30) return 'background-color: #facc15; color: #000000;';
+    if (val >= 20) return 'background-color: #4ade80; color: #000000;';
+    if (val >= 6) return 'background-color: rgba(56, 189, 248, 0.25); color: #ffffff;';
+    return '';
+  }
+
+  if (variable === 'wind_gusts_10m') {
+    if (val >= 130) return 'background-color: #7c2eb8; color: #ffffff;';
+    if (val >= 111) return 'background-color: #ff0000; color: #ffffff;';
+    if (val >= 91)  return 'background-color: #f87171; color: #000000;';
+    if (val >= 71)  return 'background-color: #fb923c; color: #000000;';
+    if (val >= 56)  return 'background-color: #facc15; color: #000000;';
+    if (val >= 36)  return 'background-color: #4ade80; color: #000000;';
+    if (val >= 16)  return 'background-color: rgba(56, 189, 248, 0.25); color: #000000;';
+    return '';
+  }
+
+  if (variable === 'precipitation') {
+    if (val >= 90) return 'background-color: #581c87; color: #ffffff;';
+    if (val >= 60) return 'background-color: #2f3f75; color: #ffffff;';
+    if (val >= 30) return 'background-color: #1e3a8a; color: #ffffff;';
+    if (val >= 15) return 'background-color: #1d4ed8; color: #ffffff;';
+    if (val >= 10) return 'background-color: #2563eb; color: #ffffff;';
+    if (val >= 6)  return 'background-color: #3b82f6; color: #ffffff;';
+    if (val >= 4)  return 'background-color: #60a5fa; color: #000000;';
+    if (val >= 0.5) return 'background-color: #93c5fd; color: #000000;';
+    if (val >= 0.2) return 'background-color: #bfdbfe; color: #000000;';
+    if (val >= 0.1) return 'background-color: #dbeafe; color: #000000;';
+    return '';
+}
+
+  if (variable === 'cloud_cover') {
+    if (val >= 90) return 'background-color: #ffffff; color: #000000;';
+    if (val >= 75) return 'background-color: #e2e8f0; color: #000000;';
+    if (val >= 50) return 'background-color: #94a3b8; color: #000000;';
+    if (val >= 25) return 'background-color: #475569; color: #ffffff;';
+    if (val >= 10) return 'background-color: #334563; color: #ffffff;'; 
+}
+
+  if (variable === 'temperature_2m') {
+    if (val >= 33) return 'background-color: #971b1b; color: #ffffff;';
+    if (val >= 30) return 'background-color: #ef4444; color: #ffffff;';
+    if (val >= 27) return 'background-color: #fb923c; color: #000000;';
+    if (val >= 25) return 'background-color: #faf615; color: #000000;';
+    if (val >= 18) return 'background-color: #3df27f; color: #000000;';
+    if (val >= 14) return 'background-color: #34d399; color: #000000;';
+    if (val >= 10) return 'background-color: #22d3ee; color: #000000;';
+    if (val >= 7)  return 'background-color: #3b82f6; color: #ffffff;';
+    if (val >= 2)  return 'background-color: #b7f6fd; color: #000000;';
+    return 'background-color: #e0f2fe; color: #000000;';
+  }
+
+  return '';
+}
+
+const compareModal = document.getElementById('modelCompareModal');
+  const openCompareBtn = document.getElementById('models-comparasion');
+  const closeCompareBtn = document.getElementById('closeCompareBtn');
+  const fetchCompareBtn = document.getElementById('fetchCompareBtn');
+  const compareUseLocationBtn = document.getElementById('compareUseLocationBtn');
+  const compareCitySearchInput = document.getElementById('compareCitySearchInput');
+  const compareVariableSelect = document.getElementById('compareVariableSelect');
+  const compareLoading = document.getElementById('compareLoading');
+
+  const COMPARE_MODELS = [
+    { key: 'ecmwf_ifs', label: 'ECMWF' },
+    { key: 'dwd_icon_seamless', label: 'ICON' },
+    { key: 'meteofrance_seamless', label: 'ARPEGE-AROME' },
+    { key: 'ncep_gfs_seamless', label: 'GFS' },
+    { key: 'ukmo_seamless', label: 'UKMO' }
+  ];
+
+  let lastCompareCoords = null;
+
+  if (openCompareBtn) {
+    openCompareBtn.addEventListener('click', () => {
+      compareModal.classList.remove('hidden');
     });
   }
 
-});
+  if (closeCompareBtn) {
+    closeCompareBtn.addEventListener('click', () => {
+      compareModal.classList.add('hidden');
+    });
+  }
+
+  async function fetchCompareData(lat, lon, locationName = '') {
+    lastCompareCoords = { lat, lon, locationName };
+    compareLoading.classList.remove('hidden');
+
+    const variable = compareVariableSelect.value;
+    const modelKeys = COMPARE_MODELS.map(m => m.key).join(',');
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=${variable}&models=${modelKeys}&timezone=auto`;
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      data.locationName = locationName;
+      renderCompareTable(data, variable);
+    } catch (err) {
+      alert('Error al obtener datos del comparador de modelos');
+    } finally {
+      compareLoading.classList.add('hidden');
+    }
+  }
+
+  function renderCompareTable(data, variable) {
+    const tHead = document.getElementById('compareTableHead');
+    const tBody = document.getElementById('compareTableBody');
+    tHead.innerHTML = '';
+    tBody.innerHTML = '';
+
+    const hourly = data.hourly;
+    if (!hourly || !hourly.time) return;
+
+    const times = hourly.time;
+    const totalCols = times.length + 1;
+    const lat = data.latitude !== undefined ? data.latitude.toFixed(4) : '--';
+    const lon = data.longitude !== undefined ? data.longitude.toFixed(4) : '--';
+    const tz = data.timezone || 'UTC';
+    const locTitle = data.locationName ? ` 🏢 ${data.locationName} |` : '';
+
+    const metaRow = document.createElement('tr');
+    metaRow.innerHTML = `<td colspan="${totalCols}" style="text-align: left; background-color: #0f172a; color: #38bdf8; font-weight: 600; padding: 8px 12px; border-bottom: 1px solid #334155;">📍${locTitle} Lat ${lat}°, Lon ${lon}° | Zona: ${tz}</td>`;
+    tHead.appendChild(metaRow);
+
+    const dayGroups = [];
+    let currentDayStr = null;
+    let currentGroup = null;
+
+    times.forEach((tStr, idx) => {
+      const dayStr = tStr.split('T')[0];
+      if (dayStr !== currentDayStr) {
+        currentDayStr = dayStr;
+        currentGroup = { dayStr, count: 0, indices: [] };
+        dayGroups.push(currentGroup);
+      }
+      currentGroup.count++;
+      currentGroup.indices.push(idx);
+    });
+
+    const dayRow = document.createElement('tr');
+    dayRow.innerHTML = `<td class="sticky-col">Modelo / Día</td>`;
+    dayGroups.forEach((g, idx) => {
+      const d = new Date(g.dayStr);
+      const dayValues = [];
+      const dayDispersions = [];
+
+      g.indices.forEach(i => {
+        const hourlyVals = [];
+        COMPARE_MODELS.forEach(m => {
+          const val = hourly[`${variable}_${m.key}`]?.[i];
+          if (val !== null && val !== undefined) {
+            hourlyVals.push(val);
+          }
+        });
+
+        if (hourlyVals.length > 0) {
+          const avg = hourlyVals.reduce((acc, v) => acc + v, 0) / hourlyVals.length;
+          dayValues.push(avg);
+        }
+
+        if (hourlyVals.length > 1) {
+          const diff = Math.max(...hourlyVals) - Math.min(...hourlyVals);
+          dayDispersions.push(diff);
+        }
+      });
+
+      let statsText = '--';
+      if (dayValues.length > 0) {
+        const minVal = Math.min(...dayValues).toFixed(1);
+        const maxVal = Math.max(...dayValues).toFixed(1);
+        const avgVal = (dayValues.reduce((acc, v) => acc + v, 0) / dayValues.length).toFixed(1);
+        
+        let dispText = '--';
+        if (dayDispersions.length > 0) {
+          const avgDisp = (dayDispersions.reduce((acc, v) => acc + v, 0) / dayDispersions.length).toFixed(1);
+          dispText = `${avgDisp}`;
+        }
+
+        let dispLevel = '';
+        if (dayDispersions.length > 0) {
+          const avgDispNum = parseFloat(dispText);
+          if (variable === 'cloud_cover') {
+            if (avgDispNum > 40) dispLevel = ' (Alta)';
+            else if (avgDispNum > 20) dispLevel = ' (Media)';
+            else dispLevel = ' (Baja)';
+          } else if (variable === 'precipitation') {
+            if (avgDispNum > 3) dispLevel = ' (Alta)';
+            else if (avgDispNum > 0.5) dispLevel = ' (Media)';
+            else dispLevel = ' (Baja)';
+          } else {
+            if (avgDispNum > 8) dispLevel = ' (Alta)';
+            else if (avgDispNum > 4) dispLevel = ' (Media)';
+            else dispLevel = ' (Baja)';
+          }
+        }
+
+        let sumAvgText = '';
+        if (variable === 'precipitation') {
+          const sumAvg = dayValues.reduce((acc, v) => acc + v, 0).toFixed(1);
+          sumAvgText = `, Suma de valores medios: ${sumAvg}mm`;
+        }
+
+        statsText = `(min: ${minVal}, max: ${maxVal}, med: ${avgVal} | Dispersión media: ${dispText}${dispLevel}${sumAvgText})`;
+      }
+
+      const cell = document.createElement('td');
+      cell.colSpan = g.count;
+      if (idx > 0) cell.className = 'day-border';
+      cell.innerHTML = `${d.getDate()}/${d.getMonth() + 1} <span style="font-weight: normal; font-size: 0.85em; color: #38bdf8;">${statsText}</span>`;
+      dayRow.appendChild(cell);
+    });
+    tHead.appendChild(dayRow);
+
+    const timeRow = document.createElement('tr');
+    timeRow.innerHTML = `<td class="sticky-col">Hora</td>`;
+    times.forEach(tStr => {
+      const dateObj = new Date(tStr);
+      const cell = document.createElement('td');
+      if (dateObj.getHours() === 0) cell.className = 'day-border';
+      cell.textContent = `${String(dateObj.getHours()).padStart(2, '0')}:00`;
+      timeRow.appendChild(cell);
+    });
+    tHead.appendChild(timeRow);
+
+    COMPARE_MODELS.forEach(model => {
+      const apiKey = `${variable}_${model.key}`;
+      const values = hourly[apiKey];
+      const tr = document.createElement('tr');
+      let html = `<td class="sticky-col">${model.label}</td>`;
+
+      times.forEach((tStr, idx) => {
+        const dateObj = new Date(tStr);
+        const isDayStart = dateObj.getHours() === 0;
+        const classAttr = isDayStart ? ' class="day-border"' : '';
+
+        if (values && values[idx] !== undefined && values[idx] !== null) {
+          html += `<td${classAttr}>${values[idx]}</td>`;
+        } else {
+          html += `<td${classAttr}>--</td>`;
+        }
+      });
+
+      tr.innerHTML = html;
+      tBody.appendChild(tr);
+    });
+
+    const isScoreVariable = ['precipitation', 'cloud_cover'].includes(variable);
+
+    if (isScoreVariable) {
+      const probTr = document.createElement('tr');
+      probTr.className = 'row-extra';
+      let probHtml = `<td class="sticky-col">Cantidad de modelos >0</td>`;
+
+      times.forEach((tStr, idx) => {
+        const dateObj = new Date(tStr);
+        const isDayStart = dateObj.getHours() === 0;
+        let validCount = 0;
+        let positiveCount = 0;
+
+        COMPARE_MODELS.forEach(model => {
+          const apiKey = `${variable}_${model.key}`;
+          const val = hourly[apiKey] ? hourly[apiKey][idx] : null;
+          if (val !== null && val !== undefined) {
+            validCount++;
+            if (val > 0) positiveCount++;
+          }
+        });
+
+        if (validCount > 0) {
+          const pct = Math.round((positiveCount / validCount) * 100);
+          let bgStyle = '';
+
+          if (positiveCount === 5 || positiveCount === 4 || positiveCount === 3) {
+            bgStyle = 'background-color: #15803d; color: #ffffff;';
+          } else if (positiveCount === 1 || positiveCount === 2) {
+            bgStyle = 'background-color: #b91c1c; color: #ffffff;';
+          } else {
+            bgStyle = 'background-color: #1e293b; color: #94a3b8;';
+          }
+
+          const borderClass = isDayStart ? ' class="day-border"' : '';
+          probHtml += `<td${borderClass} style="${bgStyle} font-weight: bold;">${pct}%</td>`;
+        } else {
+          const borderClass = isDayStart ? ' class="day-border"' : '';
+          probHtml += `<td${borderClass}>--</td>`;
+        }
+      });
+
+      probTr.innerHTML = probHtml;
+      tBody.appendChild(probTr);
+    }
+
+    const dispTr = document.createElement('tr');
+    dispTr.className = 'row-extra';
+    let dispHtml = `<td class="sticky-col">Dispersión</td>`;
+
+    times.forEach((tStr, idx) => {
+      const dateObj = new Date(tStr);
+      const isDayStart = dateObj.getHours() === 0;
+      const validValues = [];
+
+      COMPARE_MODELS.forEach(model => {
+        const apiKey = `${variable}_${model.key}`;
+        const val = hourly[apiKey] ? hourly[apiKey][idx] : null;
+        if (val !== null && val !== undefined) {
+          validValues.push(val);
+        }
+      });
+
+      if (validValues.length > 1) {
+        const max = Math.max(...validValues);
+        const min = Math.min(...validValues);
+        const diff = max - min;
+
+        let colorClass = 'disp-baja';
+        let label = 'Baja';
+
+        const nonZeroCount = validValues.filter(v => v > 0).length;
+        const totalModels = validValues.length;
+        const takesZeroSplit = nonZeroCount > 0 && nonZeroCount < totalModels;
+
+        if (variable === 'cloud_cover') {
+          if (diff > 40 || takesZeroSplit) { colorClass = 'disp-alta'; label = 'Alta'; }
+          else if (diff > 20) { colorClass = 'disp-media'; label = 'Media'; }
+        } else if (variable === 'precipitation') {
+          if (diff > 3 || takesZeroSplit) { colorClass = 'disp-alta'; label = 'Alta'; }
+          else if (diff > 0.5) { colorClass = 'disp-media'; label = 'Media'; }
+        } else {
+          if (diff > 8) { colorClass = 'disp-alta'; label = 'Alta'; }
+          else if (diff > 4) { colorClass = 'disp-media'; label = 'Media'; }
+        }
+
+        const classes = [colorClass, isDayStart ? 'day-border' : ''].filter(Boolean).join(' ');
+        dispHtml += `<td class="${classes}"><span class="${colorClass}">${label} (${diff.toFixed(1)})</span></td>`;
+      } else {
+        const classes = isDayStart ? ' class="day-border"' : '';
+        dispHtml += `<td${classes}>--</td>`;
+      }
+    });
+
+    dispTr.innerHTML = dispHtml;
+    tBody.appendChild(dispTr);
+
+    const calcRows = [
+      { key: 'min', label: 'Mínimo' },
+      { key: 'max', label: 'Máximo' },
+      { key: 'avg', label: 'Valor medio' }
+    ];
+
+    calcRows.forEach(rowInfo => {
+      const tr = document.createElement('tr');
+      tr.className = 'row-extra';
+      if (rowInfo.key === 'avg') {
+        tr.style.fontWeight = 'bold';
+        tr.style.fontStyle = 'italic';
+      }
+      let rowHtml = `<td class="sticky-col">${rowInfo.label}</td>`;
+
+      times.forEach((tStr, idx) => {
+        const dateObj = new Date(tStr);
+        const isDayStart = dateObj.getHours() === 0;
+        const validValues = [];
+
+        COMPARE_MODELS.forEach(model => {
+          const apiKey = `${variable}_${model.key}`;
+          const val = hourly[apiKey] ? hourly[apiKey][idx] : null;
+          if (val !== null && val !== undefined) {
+            validValues.push(val);
+          }
+        });
+
+        if (validValues.length > 0) {
+          let resVal = 0;
+          if (rowInfo.key === 'min') {
+            resVal = Math.min(...validValues);
+          } else if (rowInfo.key === 'max') {
+            resVal = Math.max(...validValues);
+          } else if (rowInfo.key === 'avg') {
+            const sum = validValues.reduce((acc, curr) => acc + curr, 0);
+            resVal = sum / validValues.length;
+          }
+
+          const classList = [];
+          let inlineStyle = '';
+          if (rowInfo.key === 'avg') {
+            const colorCss = getAverageColorStyle(variable, resVal);
+            if (colorCss) {
+              inlineStyle = ` style="${colorCss}"`;
+            }
+          }
+          if (isDayStart) classList.push('day-border');
+
+          const classAttr = classList.length > 0 ? ` class="${classList.join(' ')}"` : '';
+          rowHtml += `<td${classAttr}${inlineStyle}>${resVal.toFixed(1)}</td>`;
+        } else {
+          const classAttr = isDayStart ? ' class="day-border"' : '';
+          rowHtml += `<td${classAttr}>--</td>`;
+        }
+      });
+
+      tr.innerHTML = rowHtml;
+      tBody.appendChild(tr);
+    });
+  }
+
+  fetchCompareBtn.addEventListener('click', async () => {
+    const query = compareCitySearchInput.value.trim();
+    if (!query) {
+      if (lastCompareCoords) {
+        fetchCompareData(lastCompareCoords.lat, lastCompareCoords.lon, lastCompareCoords.locationName);
+      }
+      return;
+    }
+
+    const coordMatch = query.match(/^([-+]?\d+(?:\.\d+)?)\s*,\s*([-+]?\d+(?:\.\d+)?)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lon = parseFloat(coordMatch[2]);
+      await fetchCompareData(lat, lon, `Coordenadas manuales (${lat}, ${lon})`);
+      return;
+    }
+
+    compareLoading.classList.remove('hidden');
+    try {
+      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=es&format=json`);
+      const geoData = await geoRes.json();
+
+      if (!geoData.results || geoData.results.length === 0) {
+        alert('Población no encontrada');
+        return;
+      }
+
+      const place = geoData.results.find(r => r.country_code === 'ES') || geoData.results[0];
+      const placeName = [place.name, place.admin1, place.country].filter(Boolean).join(', ');
+      await fetchCompareData(place.latitude, place.longitude, placeName);
+    } catch (err) {
+      alert('Error en la búsqueda geográfica');
+    } finally {
+      compareLoading.classList.add('hidden');
+    }
+  });
+
+  compareUseLocationBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      alert('La geolocalización no está soportada por tu navegador.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        compareCitySearchInput.value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+        await fetchCompareData(lat, lon, 'Ubicación GPS actual');
+      },
+      () => {
+        alert('No se pudo obtener la ubicación GPS.');
+      }
+    );
+  });
+
+  compareVariableSelect.addEventListener('change', () => {
+    if (lastCompareCoords) {
+      fetchCompareData(lastCompareCoords.lat, lastCompareCoords.lon, lastCompareCoords.locationName);
+    }
+  });
