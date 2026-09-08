@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const select = document.getElementById('obs-select');
   const image = document.getElementById('obs-image');
+  const link = document.getElementById('obs-link');
   const metarInput = document.getElementById('metar-input');
   const metarBtn = document.getElementById('metar-btn');
   const metarDisplay = document.getElementById('metar-display');
@@ -9,6 +10,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const satType = document.getElementById('sat-type');
   const satImage = document.getElementById('sat-image');
   let lastMetarTimestamp = null;
+
+  const linksMap = {
+  'https://www.meteociel.fr/cartes_obs/temp2_sp_1h.png': 'https://www.meteociel.fr/observations-meteo/temps-reel.php?region=sp',
+  'https://www.meteociel.fr/cartes_obs/temp_sp.png': 'https://www.meteociel.fr/observations-meteo/temperatures.php?region=sp',
+  'https://www.meteociel.fr/cartes_obs/tn_sp.png': 'https://www.meteociel.fr/observations-meteo/tmini.php?region=sp',
+  'https://www.meteociel.fr/cartes_obs/txint_sp.png': 'https://www.meteociel.fr/observations-meteo/tmaxi.php?region=sp',
+  'https://www.meteociel.fr/cartes_obs/pointrosee_sp.png': 'https://www.meteociel.fr/observations-meteo/point-de-rosee.php?region=sp',
+  'https://www.meteociel.fr/cartes_obs/humi_sp.png': 'https://www.meteociel.fr/observations-meteo/humi.php?region=sp',
+  'https://www.meteociel.fr/cartes_obs/humidex_sp.png': 'https://www.meteociel.fr/observations-meteo/humidex.php?region=sp',
+  'https://www.meteociel.fr/cartes_obs/windchill_sp.png': 'https://www.meteociel.fr/observations-meteo/windchill.php?region=sp',
+  'https://www.meteociel.fr/cartes_obs/vent_sp.png': 'https://www.meteociel.fr/observations-meteo/vent.php?region=sp',
+  'https://www.meteociel.fr/cartes_obs/rafales_sp.png': 'https://www.meteociel.fr/observations-meteo/vent-rafales.php?region=sp',
+  'https://www.meteociel.fr/cartes_obs/pression2_sp.png': 'https://www.meteociel.fr/observations-meteo/pression.php?region=sp',
+  'sst': 'https://www.meteociel.fr/observations-meteo/temperature-de-la-mer.php?region=sp'
+};
 
   function normalizeWeatherReportArray(payload) {
     if (Array.isArray(payload)) return payload;
@@ -29,24 +45,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getSstUrl() {
-    const date = new Date();
-    date.setDate(date.getDate() - 2);
+  const date = new Date();
+  date.setDate(date.getDate() - 2);
 
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
 
-    return `https://www.meteociel.fr/obs/sst/${year}-${month}-${day}sp.gif`;
+  return `https://www.meteociel.fr/obs/sst/${year}-${month}-${day}sp.gif`;
+}
+
+select.addEventListener('change', (e) => {
+  const value = e.target.value;
+  if (value === 'sst') {
+    image.src = getSstUrl();
+  } else {
+    image.src = value;
   }
-
-  select.addEventListener('change', (e) => {
-    const value = e.target.value;
-    if (value === 'sst') {
-      image.src = getSstUrl();
-    } else {
-      image.src = value;
-    }
-  });
+  link.href = linksMap[value] || '#';
+});
 
 async function fetchMetarData() {
   const rawInput = metarInput.value.trim().toUpperCase();
@@ -60,7 +77,7 @@ async function fetchMetarData() {
     const targetUrl = `https://aviationweather.gov/api/data/metar?ids=${icaos}&format=json`;
     const proxyUrl = `https://metar-proxy.abusomfernandez.workers.dev/?url=${encodeURIComponent(targetUrl)}`;
 
-    const response = await fetch(proxyUrl);
+    const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
     if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
     const data = await response.json();
@@ -329,13 +346,19 @@ async function fetchMetarData() {
   });
 
   function setDefaultSatType() {
-    const currentHour = new Date().getHours();
-    if (currentHour >= 9 && currentHour < 17) {
-      satType.value = 'vistruecol';
-    } else {
-      satType.value = 'ir';
-    }
-  }
+  const now = new Date();
+  const month = now.getMonth();
+  const currentDecimalTime = now.getHours() + now.getMinutes() / 60;
+
+  const visibleHours = [
+    [8.8, 18.0], [8.0, 18.8], [7.3, 19.5], [7.0, 20.5],
+    [6.5, 21.3], [6.3, 21.8], [6.5, 21.5], [7.0, 20.8],
+    [7.5, 19.8], [8.0, 18.8], [8.3, 18.0], [8.8, 17.6]
+  ];
+
+  const [start, end] = visibleHours[month];
+  satType.value = (currentDecimalTime >= start && currentDecimalTime < end) ? 'vistruecol' : 'ir';
+}
 
   function updateSatImage() {
     const region = satRegion.value;
