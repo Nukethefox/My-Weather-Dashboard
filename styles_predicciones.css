@@ -454,6 +454,27 @@ select:focus {
   color: #94a3b8;
 }
 
+.meteogram-table thead tr:nth-child(1) td,
+.meteogram-table thead tr:nth-child(2) td,
+.meteogram-table thead tr:nth-child(3) td,
+.meteogram-table thead tr:nth-child(4) td {
+  text-align: left !important;
+}
+
+.meteogram-chart-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.meteogram-chart-wrapper {
+  position: relative;
+  height: 500px;
+  min-width: 100%;
+}
+
 #model-selector-buttons {
     display: flex;
     gap: 6px;
@@ -475,6 +496,7 @@ select:focus {
 .model-select-btn.active {
     background-color: #007bff;
     color: #ffffff;
+    text-decoration: underline;
     border-color: #0056b3;
 }
 
@@ -485,4 +507,95 @@ select:focus {
   background-color: #475569;
   margin: 0 6px;
   vertical-align: middle;
+}
+
+.model-select-btn.warning-model {
+  background-color: #040ebd;
+  color: #ffffff;
+  border-color: #b45309;
+}
+
+.time-nav {
+  flex-direction: column !important;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.time-btn-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.time-picker-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 95%;
+}
+
+@media (min-width: 768px) {
+  .time-picker-row {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+.slider-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 700px;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+#hour-picker-slider {
+  width: 100%;
+  cursor: pointer;
+  accent-color: #38bdf8;
+}
+
+.ticks-labels-container {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  margin-top: 4px;
+}
+
+.tick-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+tr.row-extra {
+  background-color: #0f172a;
+  border-top: 1px solid #334155;
+}
+
+tr.row-extra td.sticky-col {
+  background-color: #0f172a !important;
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.disp-baja {
+  background-color: rgb(1, 254, 94) !important;
+  color: #000000;
+}
+
+.disp-media {
+  background-color: rgb(234, 255, 0) !important;
+  color: #000000;
+}
+
+.disp-alta {
+  background-color: rgb(255, 0, 0) !important;
+  color: #fdfdfd;
 }
