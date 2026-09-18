@@ -92,16 +92,23 @@
     </div>
   </section>
 </section>
-<section class="content-container-2">
+<section class="content-container">
   <section class="obs-section">
-    <iframe style="border-radius: 8px; height: calc(100vh - 200px);" width="100%" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=6&overlay=radar&product=radar&level=surface&lat=40.129&lon=-2.417" frameborder="0"></iframe>
+    <iframe style="border-radius: 8px; height: calc(100vh - 200px);" width="100%" src="https://maps.blitzortung.org/en/?MapStyle=1&LightningRange=11#5.43/40.485/-3.546" frameborder="0"></iframe>
   </section>
+</section>
+<section class="content-container">
   <section class="obs-section">
-    <iframe style="border-radius: 8px; height: calc(100vh - 200px);" width="100%" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=6&overlay=satellite&product=satellite&level=surface&lat=40.129&lon=-2.417" frameborder="0"></iframe>
+    <h3 style="text-align: center;">Links útiles</h3>
+    <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.windy.com/es/-Radar-del-tiempo-radar?radar,40.110,-4.870,6', '_blank')">Windy Radar</button>
+    <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.windy.com/es/-Sat%C3%A9lite-satellite?satellite,40.110,-4.870,6', '_blank')">Windy Sat</button>
+    <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.meteoclimatic.net/index', '_blank')">Meteoclimatic (red de estaciones)</button>
+    <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.aemet.es/es/eltiempo/observacion/ultimosdatos?k=esp&w=1&datos=det', '_blank')">Resumen AEMET hoy</button>
+    <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.aemet.es/es/eltiempo/prediccion/avisos', '_blank')">Avisos AEMET</button>
   </section>
 </section>
   <footer class="main-footer">
-    <p>Datos de <a href="https://www.meteociel.fr/index.php?region=sp" target="_blank" rel="noopener">Meteociel</a>, <a href="https://embed.windy.com/config/map" target="_blank" rel="noopener">Windy</a>, <a href="https://aviationweather.gov/" target="_blank" rel="noopener">Aviation Weather</a>, <a href="https://www.rainviewer.com/api/weather-maps-api.html" target="_blank" rel="noopener">RainViewer</a> y <a href="https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api" target="_blank" rel="noopener">NASA GIBS</a></p>
+    <p>Datos de <a href="https://www.meteociel.fr/index.php?region=sp" target="_blank" rel="noopener">Meteociel</a>, <a href="https://www.blitzortung.org/es/live_lightning_maps.php?map=10" target="_blank" rel="noopener">Blitzortung.org</a>, <a href="https://aviationweather.gov/" target="_blank" rel="noopener">Aviation Weather</a>, <a href="https://www.rainviewer.com/api/weather-maps-api.html" target="_blank" rel="noopener">RainViewer</a> y <a href="https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api" target="_blank" rel="noopener">NASA GIBS</a></p>
   </footer>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script_index.js"></script>
