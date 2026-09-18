@@ -1274,7 +1274,9 @@ const compareModal = document.getElementById('modelCompareModal');
       if (validValues.length > 1) {
         const max = Math.max(...validValues);
         const min = Math.min(...validValues);
-        const diff = max - min;
+        const mean = validValues.reduce((a, b) => a + b, 0) / validValues.length;
+        const variance = validValues.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / validValues.length;
+        const diff = Math.sqrt(variance);
 
         let colorClass = 'disp-baja';
         let label = 'Baja';
@@ -1283,15 +1285,27 @@ const compareModal = document.getElementById('modelCompareModal');
         const totalModels = validValues.length;
         const takesZeroSplit = nonZeroCount > 0 && nonZeroCount < totalModels;
 
+        const maxVal = Math.max(...validValues);
+        const minVal = Math.min(...validValues);
+        const range = maxVal - minVal;
+
         if (variable === 'cloud_cover') {
-          if (diff > 40 || takesZeroSplit) { colorClass = 'disp-alta'; label = 'Alta'; }
-          else if (diff > 20) { colorClass = 'disp-media'; label = 'Media'; }
+          const hasSignificantSplit = validValues.some(v => v >= 20) && validValues.some(v => v === 0);
+          if (diff > 25 || range > 50 || hasSignificantSplit) { colorClass = 'disp-alta'; label = 'Alta'; }
+          else if (diff > 12 || range > 25) { colorClass = 'disp-media'; label = 'Media'; }
         } else if (variable === 'precipitation') {
-          if (diff > 3 || takesZeroSplit) { colorClass = 'disp-alta'; label = 'Alta'; }
-          else if (diff > 0.5) { colorClass = 'disp-media'; label = 'Media'; }
+          const hasSignificantPrecip = validValues.some(v => v >= 1.5) && validValues.some(v => v === 0);
+          if (diff > 1.5 || range > 3.0 || hasSignificantPrecip) { colorClass = 'disp-alta'; label = 'Alta'; }
+          else if (diff > 0.5 || range > 1.0) { colorClass = 'disp-media'; label = 'Media'; }
+        } else if (variable === 'wind_speed_10m' || variable === 'wind_gusts_10m') {
+          if (diff > 8.0 || range > 20.0) { colorClass = 'disp-alta'; label = 'Alta'; }
+          else if (diff > 4.0 || range > 10.0) { colorClass = 'disp-media'; label = 'Media'; }
+        } else if (variable === 'temperature_2m' || variable === 'dew_point_2m') {
+          if (diff > 2.5 || range > 6.0) { colorClass = 'disp-alta'; label = 'Alta'; }
+          else if (diff > 1.2 || range > 3.0) { colorClass = 'disp-media'; label = 'Media'; }
         } else {
-          if (diff > 8) { colorClass = 'disp-alta'; label = 'Alta'; }
-          else if (diff > 4) { colorClass = 'disp-media'; label = 'Media'; }
+          if (diff > 3.0 || range > 7.0) { colorClass = 'disp-alta'; label = 'Alta'; }
+          else if (diff > 1.5 || range > 3.5) { colorClass = 'disp-media'; label = 'Media'; }
         }
 
         const classes = [colorClass, isDayStart ? 'day-border' : ''].filter(Boolean).join(' ');
