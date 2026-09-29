@@ -32,7 +32,7 @@
           <option value="sst">Temperatura del mar</option>
         </select>
       </div>
-      <p style="color: #b0b0b0; text-align: center;">Datos reales recogidos por estaciones meteorológicas (excepto temperatura del mar, que es calculado). Haz clic para ver detalles de cada punto.</p>
+      <p style="color: #b0b0b0; text-align: center;">Datos reales recogidos por estaciones meteorológicas METAR/personales (excepto temperatura del mar, que es calculada). <br>Haz clic para abrir MeteoCiel y ver detalles de cada punto.</p>
       <div class="image-wrapper">
         <a id="obs-link" href="https://www.meteociel.fr/observations-meteo/temps-reel.php?region=sp" target="_blank" rel="noopener noreferrer">
           <img id="obs-image" src="https://www.meteociel.fr/cartes_obs/temp2_sp_1h.png" alt="Mapa de observación meteorológica">
@@ -89,6 +89,22 @@
         </label>
       </div>
       <div id="radar-map"></div>
+      <div class="radar-legend" aria-label="Leyenda de intensidad de lluvia">
+        <div class="radar-legend-title">Intensidad de lluvia <span>(dBZ)</span></div>
+        <div class="radar-legend-scale">
+          <div class="radar-legend-track" role="img" aria-label="Escala de 0 a 68 dBZ: azul claro, azul, verde, amarillo, rojo, rosa y blanco">
+            <div class="radar-legend-gradient"></div>
+          </div>
+          <div class="radar-legend-ticks" aria-label="Equivalencias aproximadas">
+            <span style="left: 0%"><strong>0</strong></span>
+            <span style="left: 47.06%"><strong>32</strong></span>
+            <span style="left: 63.93%"><strong>43</strong></span>
+            <span style="left: 80.9%"><strong>55</strong></span>
+            <span style="left: 100%"><strong>68</strong></span>
+          </div>
+        </div>
+        <p class="radar-legend-key"><span><i class="legend-blue"></i>Azul: débil</span><span><i class="legend-green"></i>Verde: moderada</span><span><i class="legend-yellow"></i><i class="legend-red"></i>Amarillo/rojo: fuerte</span><span><i class="legend-pink"></i><i class="legend-white"></i>Rosa/blanco: muy fuerte</span></p>
+      </div>
     </div>
   </section>
 </section>
@@ -103,7 +119,7 @@
     <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.windy.com/es/-Radar-del-tiempo-radar?radar,40.110,-4.870,6', '_blank')">Windy Radar</button>
     <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.windy.com/es/-Sat%C3%A9lite-satellite?satellite,40.110,-4.870,6', '_blank')">Windy Sat</button>
     <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.meteoclimatic.net/index', '_blank')">Meteoclimatic (red de estaciones)</button>
-    <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.aemet.es/es/eltiempo/observacion/ultimosdatos?k=esp&w=1&datos=det', '_blank')">Resumen AEMET hoy</button>
+    <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.wunderground.com/wundermap?weather-stations=temperature-wind', '_blank')">Wunderground (red de estaciones)</button>
     <button style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;" onclick="window.open('https://www.aemet.es/es/eltiempo/prediccion/avisos', '_blank')">Avisos AEMET</button>
   </section>
 </section>
