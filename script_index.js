@@ -411,8 +411,127 @@ async function fetchMetarData() {
     return new Date(timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
+  const RAIN_SOURCE_COLORS = `
+    63615914 66635a19 69665c1e 6c685d24 6f6b5f29 726e612e 75706234 78736439
+    7c75653e 7f786744 827b6949 857d6a4e 88806c54 8b826d59 8e856f5e 92887164
+    9e93756e aa9e7978 b6a97e82 c2b4828c cec08796 d2c48ba0 d6c88faa dacc93b4
+    ded097be 88ddeeff 6cd1ebff 51c5e8ff 36bae5ff 1baee2ff 00a3e0ff 009ad5ff
+    0091caff 0088bfff 007fb4ff 0077aaff 0070a3ff 00699cff 006295ff 005b8eff
+    005588ff 005180ff 004e78ff 004a70ff 004768ff ffee00ff ffe000ff ffd200ff
+    ffc500ff ffb700ff ffaa00ff ff9f00ff ff9500ff ff8b00ff ff8100ff ff4400ff
+    f23600ff e62800ff d91b00ff cd0d00ff c10000ff a80000ff 8f0000ff 760000ff
+    5d0000ff ffaaffff ff9fffff ff95ffff ff8bffff ff81ffff ff77ffff ff6cffff
+    ff62ffff ff58ffff ff4effff
+  `.trim().split(/\s+/).map((hex, index) => ({ dbz: index - 10, rgba: hex.match(/../g).map(value => parseInt(value, 16)) }));
+  RAIN_SOURCE_COLORS.push({ dbz: 65, rgba: [255, 255, 255, 255] });
+  RAIN_SOURCE_COLORS.push({ dbz: 75, rgba: [0, 255, 0, 255] });
+
+  const SNOW_SOURCE_COLORS = `
+    ceffff0c cdffff19 ccffff26 cbffff33 cbffff3f caffff4c c9ffff59 c8ffff66
+    c7ffff72 c7ffff7f c6ffff8c c5ffff99 c4ffffa5 c3ffffb2 c3ffffbf c2ffffcc
+    c1ffffd8 c0ffffe5 bffffff2 bfffffff b8f8ffff b2f2ffff abebffff a5e5ffff
+    9fdfffff 98d8ffff 92d2ffff 8bcbffff 85c5ffff 7fbfffff 78b8ffff 72b2ffff
+    6babffff 65a5ffff 5f9fffff 5b9bffff 5898ffff 5595ffff 5292ffff 4f8fffff
+    4b8bffff 4888ffff 4585ffff 4282ffff 3f7fffff 3b7bffff 3878ffff 3575ffff
+    3272ffff 2f6fffff 2b6bffff 2868ffff 2565ffff 2262ffff 1f5fffff 1b5bffff
+    1858ffff 1555ffff 1252ffff 0f4fffff 0c4bffff 0948ffff 0645ffff 0242ffff
+    003fffff 003bffff 0038ffff 0035ffff 0032ffff 002fffff 002bffff 0028ffff
+    0025ffff 0022ffff 001fffff 001bffff 0018ffff 0015ffff 0012ffff 000fffff
+    000cffff 0009ffff 0006ffff 0002ffff 0000ffff
+  `.trim().split(/\s+/).map(hex => hex.match(/../g).map(value => parseInt(value, 16)));
+
+  const CUSTOM_RADAR_STOPS = [
+    [0, 180, 225, 250, 255], [32, 125, 153, 255, 255],
+    [34.8561, 45, 214, 97, 255], [38.2782, 24, 173, 19, 255],
+    [43.4704, 255, 237, 0, 255], [47.7154, 255, 0, 0, 255],
+    [50.8561, 240, 143, 219, 255], [55.0103, 255, 255, 255, 255],
+    [68, 255, 255, 255, 255], [100, 255, 255, 255, 255],
+    [101, 0, 0, 0, 0], [255, 0, 0, 0, 0]
+  ];
+
+  const recoloredColorCache = new Map();
+  let warnedAboutRadarRecolor = false;
+
+  function colorDistanceSquared(first, second) {
+    return first.reduce((distance, value, index) => distance + (value - second[index]) ** 2, 0);
+  }
+
+  function findClosestColor(color, palette) {
+    let closest = null;
+    for (const entry of palette) {
+      const rgba = entry.rgba || entry;
+      const distance = colorDistanceSquared(color, rgba);
+      if (!closest || distance < closest.distance) closest = { entry, distance };
+    }
+    return closest;
+  }
+
+  function getCustomRadarColor(dbz) {
+    let upperIndex = CUSTOM_RADAR_STOPS.findIndex(stop => stop[0] >= dbz);
+    if (upperIndex < 0) upperIndex = CUSTOM_RADAR_STOPS.length - 1;
+    const upper = CUSTOM_RADAR_STOPS[upperIndex];
+    const lower = CUSTOM_RADAR_STOPS[Math.max(0, upperIndex - 1)];
+    const fraction = upper[0] === lower[0] ? 0 : (dbz - lower[0]) / (upper[0] - lower[0]);
+    return upper.slice(1).map((value, index) => Math.round(lower[index + 1] + (value - lower[index + 1]) * fraction));
+  }
+
+  function recolorRadarTile(context) {
+    const imageData = context.getImageData(0, 0, context.canvas.width, context.canvas.height);
+    const pixels = imageData.data;
+    for (let index = 0; index < pixels.length; index += 4) {
+      const color = [pixels[index], pixels[index + 1], pixels[index + 2], pixels[index + 3]];
+      if (color[3] === 0) continue;
+
+      const cacheKey = color.join(',');
+      let result = recoloredColorCache.get(cacheKey);
+      if (!recoloredColorCache.has(cacheKey)) {
+        const rainMatch = findClosestColor(color, RAIN_SOURCE_COLORS);
+        const snowMatch = findClosestColor(color, SNOW_SOURCE_COLORS);
+        result = snowMatch.distance < rainMatch.distance
+          ? null
+          : getCustomRadarColor(rainMatch.entry.dbz);
+        recoloredColorCache.set(cacheKey, result);
+      }
+
+      if (result) {
+        pixels[index] = result[0];
+        pixels[index + 1] = result[1];
+        pixels[index + 2] = result[2];
+        pixels[index + 3] = result[3];
+      }
+    }
+    context.putImageData(imageData, 0, 0);
+  }
+
+  const CustomRadarTileLayer = L.TileLayer.extend({
+    createTile(coords, done) {
+      const canvas = document.createElement('canvas');
+      canvas.width = TILE_SIZE;
+      canvas.height = TILE_SIZE;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      const image = new Image();
+      image.crossOrigin = 'anonymous';
+      image.onload = () => {
+        try {
+          context.drawImage(image, 0, 0, TILE_SIZE, TILE_SIZE);
+          recolorRadarTile(context);
+          done(null, canvas);
+        } catch (error) {
+          if (!warnedAboutRadarRecolor) {
+            console.warn('No se pudo repintar un tile RainViewer; se muestra el original.', error);
+            warnedAboutRadarRecolor = true;
+          }
+          done(null, canvas);
+        }
+      };
+      image.onerror = () => done(new Error('No se pudo cargar un tile RainViewer.'), canvas);
+      image.src = this.getTileUrl(coords);
+      return canvas;
+    }
+  });
+
   function createRadarLayer(frame) {
-    return new L.TileLayer(apiData.host + frame.path + '/' + TILE_SIZE + '/{z}/{x}/{y}/2/1_1.png', {
+    return new CustomRadarTileLayer(apiData.host + frame.path + '/' + TILE_SIZE + '/{z}/{x}/{y}/2/0_1.png', {
       tileSize: 256,
       opacity: 0.001,
       maxNativeZoom: 7,
