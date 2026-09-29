@@ -437,6 +437,144 @@ body {
   accent-color: #38bdf8;
 }
 
+.radar-legend {
+  padding: 10px 16px 12px;
+  background: #111c2b;
+  border-top: 1px solid #2b3d50;
+  color: #e2e8f0;
+}
+
+.radar-legend-title {
+  margin-bottom: 8px;
+  color: #f8fafc;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.radar-legend-title span {
+  color: #91a4b8;
+  font-weight: 400;
+}
+
+.radar-legend-scale {
+  padding: 0 8px;
+}
+
+.radar-legend-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 2px;
+  background-color: #354356;
+  background-image: conic-gradient(#536176 25%, #354356 0 50%, #536176 0 75%, #354356 0);
+  background-size: 8px 8px;
+}
+
+.radar-legend-gradient {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    #b4e1faff 0%,
+    #7d99ffff 47.06%,
+    #2dd661ff 51.26%,
+    #18ad13ff 56.29%,
+    #ffed00ff 63.93%,
+    #ff0000ff 70.17%,
+    #f08fdbff 74.79%,
+    #ffffffff 80.9%,
+    #ffffffff 100%);
+}
+
+.radar-legend-ticks {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  height: 30px;
+  margin-top: 5px;
+  color: #a9bacb;
+  font-family: monospace;
+  font-size: 0.64rem;
+}
+
+.radar-legend-ticks span {
+  position: absolute;
+  display: grid;
+  gap: 1px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.radar-legend-ticks span:first-child {
+  transform: none;
+  text-align: left;
+}
+
+.radar-legend-ticks span:last-child {
+  transform: translateX(-100%);
+  text-align: right;
+}
+
+.radar-legend-ticks strong {
+  color: #dce8f3;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.radar-legend-ticks small {
+  color: #91a4b8;
+  font-family: inherit;
+  font-size: 0.59rem;
+}
+
+.radar-legend-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 3px 8px 0;
+  color: #a9bacb;
+  font-size: 0.68rem;
+}
+
+.radar-legend-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.radar-legend-key i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.legend-blue { background: #7d99ffff; }
+.legend-green { background: #18ad13ff; }
+.legend-yellow { background: #ffed00ff; }
+.legend-red { background: #ff0000ff; }
+.legend-pink { background: #f08fdbff; }
+.legend-white { background: #fff; border: 1px solid #91a4b8; }
+
+@media (max-width: 520px) {
+  .radar-legend {
+    padding: 10px 8px 12px;
+  }
+
+  .radar-legend-scale {
+    padding: 0 4px;
+  }
+
+  .radar-legend-ticks small {
+    font-size: 0.55rem;
+  }
+
+  .radar-legend-key {
+    gap: 6px 11px;
+    margin-right: 4px;
+    margin-left: 4px;
+    font-size: 0.64rem;
+  }
+}
+
 @media (orientation: portrait) {
   .content-container-2 {
     grid-template-columns: 1fr;
