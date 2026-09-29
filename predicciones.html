@@ -34,6 +34,7 @@
           <option value="precip">Precipitaciones</option>
           <option value="precip_acc">Precipitación acumulada</option>
           <option value="agua_precip">Agua precipitable</option>
+          <option id="opt-vertical-velocity" value="velocidad_vertical">Velocidad vertical 700hPa (≈3000m)</option>
           <option value="clouds">Nubosidad</option>
           <option value="t2m">Temperatura 2m</option>
           <option value="t850">Temperatura 850hPa (≈1500m)</option>
@@ -61,6 +62,7 @@
         <span id="forecast-hour-label">Pronóstico: +0h</span>
         <button id="next-time-btn">+1h ›</button>
         <button id="plus12-time-btn">+6h ›</button>
+        <button id="animate-model-btn" type="button" aria-label="Animar modelo" aria-pressed="false" title="Animar modelo">▶</button>
       </div>
       <div class="time-picker-row">
         <input type="datetime-local" id="date-picker-select" class="date-picker-input">
@@ -129,10 +131,9 @@
     </div>
     <div id="compareLoading" class="meteogram-loading hidden">Cargando datos de todos los modelos...</div>
     <div class="meteogram-scroll-container">
-      <table id="compareTable" class="meteogram-table">
-        <thead id="compareTableHead"></thead>
-        <tbody id="compareTableBody"></tbody>
-      </table>
+      <div id="compareChartWrapper" class="meteogram-chart-container">
+        <canvas id="compareChart"></canvas>
+      </div>
     </div>
   </div>
 </div>
