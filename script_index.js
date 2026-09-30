@@ -204,6 +204,105 @@ async function fetchMetarData() {
       'OVC': 'Cubierto'
     };
 
+    function renderChangeGroups(rawOb) {
+      const tokens = rawOb.toUpperCase().match(/\S+/g) || [];
+      if (tokens.includes('NOSIG')) return '';
+
+      const groupsHtml = [];
+      for (let index = 0; index < tokens.length; index++) {
+        const changeType = tokens[index];
+        if (changeType !== 'TEMPO' && changeType !== 'BECMG') continue;
+
+        let groupEnd = index + 1;
+        while (groupEnd < tokens.length &&
+          !['TEMPO', 'BECMG', 'NOSIG', 'RMK'].includes(tokens[groupEnd])) {
+          groupEnd++;
+        }
+
+        const groupTokens = tokens.slice(index + 1, groupEnd);
+        const timeRangeToken = groupTokens.find(token => /^\d{4}\/\d{4}$/.test(token));
+        const visibilityToken = groupTokens.find(token => /^\d{4}$/.test(token));
+        const weatherTokenPattern = /^(?:[-+])?(?:VC|RE)?(?:(?:FZ|TS|SH|BL|DR|PR|BC|MI)*(?:DZ|RA|SN|SG|PL|GR|GS|BR|FG|FU|VA|DU|SA|HZ|PO|SQ|FC|SS|DS)+|TS)$/;
+        const cloudItems = [];
+        const weatherTokens = [];
+        let windHtml = '';
+
+        groupTokens.forEach(token => {
+          const cloudMatch = token.match(/^(FEW|SCT|BKN|OVC)(\d{3})(CB|TCU)?$/);
+          if (cloudMatch) {
+            const [, cover, height, cloudType] = cloudMatch;
+            const baseFeet = Number(height) * 100;
+            const translation = coverTranslations[cover] ? ` (${coverTranslations[cover]})` : '';
+            const typeLabel = cloudType === 'CB'
+              ? ' <strong style="color: #ef4444;">Cumulonimbos</strong>'
+              : cloudType === 'TCU'
+                ? ' <strong style="color: #f97316;">Torrecúmulos</strong>'
+                : '';
+
+            cloudItems.push({
+              baseFeet,
+              html: `
+                <div class="cloud-item">
+                  <span>☁️ ${cover}${translation}${typeLabel}</span>
+                  <span>Base: ${baseFeet} ft (${Math.round(baseFeet * 0.3048)} m)</span>
+                </div>
+              `
+            });
+          } else if (/^(VRB|\d{3})(\d{2,3})(?:G(\d{2,3}))?(KT|MPS|KMH)$/.test(token)) {
+            const [, direction, speed, gust, unit] = token.match(/^(VRB|\d{3})(\d{2,3})(?:G(\d{2,3}))?(KT|MPS|KMH)$/);
+            const unitLabel = unit === 'KT' ? 'kt' : unit === 'MPS' ? 'm/s' : 'km/h';
+            const toKmh = unit === 'KT' ? 1.852 : unit === 'MPS' ? 3.6 : 1;
+            const windDescription = direction === 'VRB'
+              ? `Viento variable a ${speed} ${unitLabel} (${Math.round(Number(speed) * toKmh)} km/h)`
+              : `Viento de ${direction}° a ${speed} ${unitLabel} (${Math.round(Number(speed) * toKmh)} km/h)`;
+            const gustDescription = gust
+              ? `, con rachas de ${gust} ${unitLabel} (${Math.round(Number(gust) * toKmh)} km/h)`
+              : '';
+            windHtml = `<div class="cloud-item"><span>Viento</span><span>${windDescription}${gustDescription}</span></div>`;
+          } else if (weatherTokenPattern.test(token)) {
+            weatherTokens.push(token);
+          }
+        });
+
+        const detailsHtml = [];
+        if (timeRangeToken) {
+          const [, startDay, startHour, endDay, endHour] = timeRangeToken.match(/^(\d{2})(\d{2})\/(\d{2})(\d{2})$/);
+          detailsHtml.push(`<div class="cloud-item"><span>Franja horaria</span><span>Día ${startDay}, ${startHour}Z – día ${endDay}, ${endHour}Z</span></div>`);
+        }
+        if (visibilityToken) {
+          const visibility = visibilityToken === '9999'
+            ? '9999 m (10 km o más)'
+            : `${Number(visibilityToken)} m`;
+          detailsHtml.push(`<div class="cloud-item"><span>Visibilidad</span><span>${visibility}</span></div>`);
+        }
+        if (windHtml) detailsHtml.push(windHtml);
+        detailsHtml.push(...cloudItems.sort((a, b) => b.baseFeet - a.baseFeet).map(cloud => cloud.html));
+        if (weatherTokens.length > 0) {
+          detailsHtml.push(`<div class="cloud-item"><span>🌧️ ${decodeWxString(weatherTokens.join(' '))}</span></div>`);
+        }
+        if (detailsHtml.length === 0) {
+          detailsHtml.push('<div class="cloud-item"><span>Sin datos de visibilidad, nubes o fenómenos para descifrar.</span></div>');
+        }
+
+        const changeLabel = changeType === 'TEMPO' ? 'cambios temporales' : 'cambios graduales';
+        groupsHtml.push(`
+          <div>
+            <div class="stat-label">${changeType} · ${changeLabel}</div>
+            ${detailsHtml.join('')}
+          </div>
+        `);
+        index = groupEnd - 1;
+      }
+
+      if (groupsHtml.length === 0) return '';
+      return `
+        <div class="cloud-layers">
+          <div class="stat-label">Cambios próximos</div>
+          ${groupsHtml.join('')}
+        </div>
+      `;
+    }
+
     reports.forEach(report => {
       let visibKm = '--';
       if (report.visib !== undefined) {
@@ -281,6 +380,7 @@ async function fetchMetarData() {
           </div>
         `;
       }
+      const changeGroupsHtml = renderChangeGroups(rawOb);
 
       const card = document.createElement('div');
       card.className = 'metar-card';
@@ -331,6 +431,7 @@ async function fetchMetarData() {
           </div>
 
           ${weatherHtml}
+          ${changeGroupsHtml}
 
           <div class="raw-ob">${rawOb}</div>
         </div>
@@ -379,7 +480,8 @@ async function fetchMetarData() {
 
   const TILE_SIZE = window.devicePixelRatio >= 2 ? 512 : 256;
   const RADAR_OPACITY = 0.8;
-  const ANIMATION_DELAY_MS = 500;
+  const RADAR_MIN_DBZ = 15;
+  const radarAnimationSpeedSelect = document.getElementById('radar-animation-speed-select');
   const API_URL = "https://api.rainviewer.com/public/weather-maps.json";
 
   let apiData = {};
@@ -441,7 +543,7 @@ async function fetchMetarData() {
   `.trim().split(/\s+/).map(hex => hex.match(/../g).map(value => parseInt(value, 16)));
 
   const CUSTOM_RADAR_STOPS = [
-    [0, 180, 225, 250, 255], [32, 125, 153, 255, 255],
+    [15, 154, 191, 252, 255], [32, 125, 153, 255, 255],
     [34.8561, 45, 214, 97, 255], [38.2782, 24, 173, 19, 255],
     [43.4704, 255, 237, 0, 255], [47.7154, 255, 0, 0, 255],
     [50.8561, 240, 143, 219, 255], [55.0103, 255, 255, 255, 255],
@@ -467,6 +569,8 @@ async function fetchMetarData() {
   }
 
   function getCustomRadarColor(dbz) {
+    if (dbz < RADAR_MIN_DBZ) return [0, 0, 0, 0];
+
     let upperIndex = CUSTOM_RADAR_STOPS.findIndex(stop => stop[0] >= dbz);
     if (upperIndex < 0) upperIndex = CUSTOM_RADAR_STOPS.length - 1;
     const upper = CUSTOM_RADAR_STOPS[upperIndex];
@@ -571,6 +675,12 @@ async function fetchMetarData() {
     }
   }
 
+  function getRadarAnimationDelay(position) {
+    return position === mapFrames.length - 1
+      ? 2000
+      : Number(radarAnimationSpeedSelect.value) || 400;
+  }
+
   function updateTimestamp(frame) {
     document.getElementById("radar-timestamp").innerHTML = formatTime(frame.time);
   }
@@ -594,8 +704,7 @@ async function fetchMetarData() {
       animationPosition = position;
 
       if (animationTimer) {
-        const delay = (position === mapFrames.length - 1) ? 2000 : ANIMATION_DELAY_MS;
-        animationTimer = setTimeout(playAnimation, delay);
+        animationTimer = setTimeout(playAnimation, getRadarAnimationDelay(position));
       }
       return;
     }
@@ -615,8 +724,7 @@ async function fetchMetarData() {
       isLoading = false;
 
       if (animationTimer) {
-        const delay = (position === mapFrames.length - 1) ? 2000 : ANIMATION_DELAY_MS;
-        animationTimer = setTimeout(playAnimation, delay);
+        animationTimer = setTimeout(playAnimation, getRadarAnimationDelay(position));
       }
     });
 
@@ -647,6 +755,12 @@ async function fetchMetarData() {
   }
 
   document.getElementById("radar-play-btn").addEventListener("click", playStopAnimation);
+  radarAnimationSpeedSelect.addEventListener('change', () => {
+    if (animationTimer && animationTimer !== true) {
+      clearTimeout(animationTimer);
+      animationTimer = setTimeout(playAnimation, getRadarAnimationDelay(animationPosition));
+    }
+  });
   document.getElementById("radar-prev-btn").addEventListener("click", () => {
     stopAnimation();
     showFrame(animationPosition - 1);
