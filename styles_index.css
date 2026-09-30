@@ -386,6 +386,27 @@ body {
   font-family: monospace;
 }
 
+#radar-animation-speed-select {
+  min-height: 34px;
+  padding: 0 30px 0 10px;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#radar-animation-speed-select:hover {
+  border-color: #38bdf8;
+}
+
+#radar-animation-speed-select:focus-visible {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
 .radar-buttons {
   display: flex;
   gap: 0.5rem;
@@ -456,102 +477,32 @@ body {
   font-weight: 400;
 }
 
-.radar-legend-scale {
-  padding: 0 8px;
-}
-
-.radar-legend-track {
-  height: 10px;
-  overflow: hidden;
-  border-radius: 2px;
-  background-color: #354356;
-  background-image: conic-gradient(#536176 25%, #354356 0 50%, #536176 0 75%, #354356 0);
-  background-size: 8px 8px;
-}
-
-.radar-legend-gradient {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    #b4e1faff 0%,
-    #7d99ffff 47.06%,
-    #2dd661ff 51.26%,
-    #18ad13ff 56.29%,
-    #ffed00ff 63.93%,
-    #ff0000ff 70.17%,
-    #f08fdbff 74.79%,
-    #ffffffff 80.9%,
-    #ffffffff 100%);
-}
-
-.radar-legend-ticks {
-  position: relative;
-  display: flex;
-  justify-content: space-between;
-  height: 30px;
-  margin-top: 5px;
-  color: #a9bacb;
-  font-family: monospace;
-  font-size: 0.64rem;
-}
-
-.radar-legend-ticks span {
-  position: absolute;
+.radar-legend-ranges {
   display: grid;
-  gap: 1px;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  text-align: center;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+  gap: 6px 18px;
 }
 
-.radar-legend-ticks span:first-child {
-  transform: none;
-  text-align: left;
-}
-
-.radar-legend-ticks span:last-child {
-  transform: translateX(-100%);
-  text-align: right;
-}
-
-.radar-legend-ticks strong {
-  color: #dce8f3;
-  font-size: 0.68rem;
-  font-weight: 600;
-}
-
-.radar-legend-ticks small {
-  color: #91a4b8;
-  font-family: inherit;
-  font-size: 0.59rem;
-}
-
-.radar-legend-key {
+.radar-legend-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  margin: 3px 8px 0;
-  color: #a9bacb;
-  font-size: 0.68rem;
-}
-
-.radar-legend-key span {
-  display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  color: #a9bacb;
+  font-size: 0.75rem;
 }
 
-.radar-legend-key i {
-  width: 8px;
-  height: 8px;
+.radar-legend-swatch {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
   border-radius: 2px;
 }
 
-.legend-blue { background: #7d99ffff; }
-.legend-green { background: #18ad13ff; }
-.legend-yellow { background: #ffed00ff; }
-.legend-red { background: #ff0000ff; }
-.legend-pink { background: #f08fdbff; }
+.legend-blue { background: #93bdff; }
+.legend-green { background: #37c137; }
+.legend-yellow { background: #ffed00; }
+.legend-red { background: #ff0000; }
+.legend-pink { background: #de83ac; }
 .legend-white { background: #fff; border: 1px solid #91a4b8; }
 
 @media (max-width: 520px) {
@@ -559,19 +510,8 @@ body {
     padding: 10px 8px 12px;
   }
 
-  .radar-legend-scale {
-    padding: 0 4px;
-  }
-
-  .radar-legend-ticks small {
-    font-size: 0.55rem;
-  }
-
-  .radar-legend-key {
-    gap: 6px 11px;
-    margin-right: 4px;
-    margin-left: 4px;
-    font-size: 0.64rem;
+  .radar-legend-ranges {
+    grid-template-columns: 1fr;
   }
 }
 
