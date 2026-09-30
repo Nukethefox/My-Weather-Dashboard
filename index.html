@@ -77,6 +77,11 @@
     <div class="radar-container">
       <div class="radar-controls">
         <span class="radar-title">Radar de precipitación</span>
+        <select id="radar-animation-speed-select" aria-label="Velocidad de animación del radar">
+          <option value="1000">Lento</option>
+          <option value="650">Medio</option>
+          <option value="400" selected>Rápido</option>
+        </select>
         <span id="radar-timestamp">Cargando...</span>
         <div class="radar-buttons">
           <button id="radar-prev-btn">‹</button>
@@ -90,20 +95,15 @@
       </div>
       <div id="radar-map"></div>
       <div class="radar-legend" aria-label="Leyenda de intensidad de lluvia">
-        <div class="radar-legend-title">Intensidad de lluvia <span>(dBZ)</span></div>
-        <div class="radar-legend-scale">
-          <div class="radar-legend-track" role="img" aria-label="Escala de 0 a 68 dBZ: azul claro, azul, verde, amarillo, rojo, rosa y blanco">
-            <div class="radar-legend-gradient"></div>
-          </div>
-          <div class="radar-legend-ticks" aria-label="Equivalencias aproximadas">
-            <span style="left: 0%"><strong>0</strong></span>
-            <span style="left: 47.06%"><strong>32</strong></span>
-            <span style="left: 63.93%"><strong>43</strong></span>
-            <span style="left: 80.9%"><strong>55</strong></span>
-            <span style="left: 100%"><strong>68</strong></span>
-          </div>
+        <div class="radar-legend-title">Intensidad de lluvia <span>(mm/h aproximados según dBZ)</span></div>
+        <div class="radar-legend-ranges">
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-blue"></span><span>Azul: 0,32–5,5 mm/h (15–34,9 dBZ)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-green"></span><span>Verde: 5,5–19 mm/h (34,9–43,5 dBZ)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-yellow"></span><span>Amarillo: 19–35 mm/h (43,5–47,7 dBZ)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-red"></span><span>Rojo: 35–55 mm/h (47,7–50,9 dBZ)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-pink"></span><span>Rosa: 55–100 mm/h (50,9–55 dBZ)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-white"></span><span>Blanco: más de 100 mm/h (más de 55 dBZ)</span></div>
         </div>
-        <p class="radar-legend-key"><span><i class="legend-blue"></i>Azul: débil</span><span><i class="legend-green"></i>Verde: moderada</span><span><i class="legend-yellow"></i><i class="legend-red"></i>Amarillo/rojo: fuerte</span><span><i class="legend-pink"></i><i class="legend-white"></i>Rosa/blanco: muy fuerte</span></p>
       </div>
     </div>
   </section>
