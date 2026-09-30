@@ -1,3 +1,9 @@
+const GEOLOCATION_OPTIONS = {
+  enableHighAccuracy: false,
+  maximumAge: 300000,
+  timeout: 10000
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const regionSelect = document.getElementById('region-select');
   const modelsContainer = document.getElementById('models-container');
@@ -7,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const minus12TimeBtn = document.getElementById('minus12-time-btn');
   const plus12TimeBtn = document.getElementById('plus12-time-btn');
   const animateModelBtn = document.getElementById('animate-model-btn');
+  const animationSpeedSelect = document.getElementById('animation-speed-select');
   const forecastHourLabel = document.getElementById('forecast-hour-label');
   const imagesDisplayContainer = document.getElementById('images-display-container');
   const modelSelectorButtons = document.getElementById('model-selector-buttons');
@@ -21,19 +28,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const MODELS_CONFIG = {
     peninsula: [
       { id: 'ecmwf', name: 'ECMWF 9KM', runInterval: 6, delayHours: 6, maxHour: 360, step: 1 },
-      { id: 'icon_eu', name: 'ICON-EU', runInterval: 3, delayHours: 2, maxHour: 120, step: 1 },
-      { id: 'ukmo_hd', name: 'UKMO HD', runInterval: 6, delayHours: 4, maxHour: 144, step: 1 },
-      { id: 'aromeIFS', name: 'AROME-IFS 2.5KM', runInterval: 6, delayHours: 4, maxHour: 51, step: 1 },
-      { id: 'arome25', name: 'AROME 2.5KM', runInterval: 6, delayHours: 4, maxHour: 51, step: 1 },
+      { id: 'icon_eu', name: 'ICON-EU', runInterval: 3, delayHours: 3, maxHour: 120, step: 1 },
+      { id: 'ukmo_hd', name: 'UKMO HD', runInterval: 6, delayHours: 6, maxHour: 144, step: 1 },
+      { id: 'aromeIFS', name: 'AROME-IFS 2.5KM', runInterval: 6, delayHours: 6, maxHour: 51, step: 1 },
+      { id: 'arome25', name: 'AROME 2.5KM', runInterval: 6, delayHours: 6, maxHour: 51, step: 1 },
       { id: 'wrf', name: 'WRF 2KM', runInterval: 6, delayHours: 6, maxHour: 36, step: 1 },
       { id: 'gfs', name: 'GFS', runInterval: 6, delayHours: 6, maxHour: 384, step: 3 },
-      { id: 'arpege', name: 'ARPEGE', runInterval: 6, delayHours: 4, maxHour: 114, step: 1 }
+      { id: 'arpege', name: 'ARPEGE', runInterval: 6, delayHours: 6, maxHour: 114, step: 1 }
     ],
     europa: [
       { id: 'ecmwf_eu', name: 'ECMWF Europa', runInterval: 6, delayHours: 6, maxHour: 360, step: 3 },
       { id: 'gfs_eu', name: 'GFS Europa', runInterval: 6, delayHours: 6, maxHour: 192, step: 6 },
-      { id: 'ukmo_eu', name: 'UKMO Europa', runInterval: 12, delayHours: 4, maxHour: 168, step: 12 },
-      { id: 'arpege_eu', name: 'ARPEGE Europa', runInterval: 6, delayHours: 3, maxHour: 114, step: 3 },
+      { id: 'ukmo_eu', name: 'UKMO Europa', runInterval: 12, delayHours: 6, maxHour: 168, step: 12 },
+      { id: 'arpege_eu', name: 'ARPEGE Europa', runInterval: 6, delayHours: 6, maxHour: 114, step: 3 },
       { id: 'wrf_eu', name: 'WRF Europa', runInterval: 6, delayHours: 6, maxHour: 120, step: 1 },
       { id: 'icon_eu_eu', name: 'ICON-EU Europa', runInterval: 3, delayHours: 2, maxHour: 120, step: 1 }
     ]
@@ -232,37 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
       modelSelectorButtons.appendChild(btn);
     });
 
-    let minLimitDateObj = null;
-
-    availableModels.forEach(model => {
-      const runSelect = document.getElementById(`run-${model.id}`);
-      const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
-      const runHourUtc = parseInt(selectedRunStr.substring(8, 10), 10);
-
-      const now = new Date();
-      const currentUtcHour = now.getUTCHours() + (now.getUTCMinutes() / 60);
-      let elapsedSinceRun = currentUtcHour - runHourUtc;
-      if (elapsedSinceRun < 0) elapsedSinceRun += 24;
-
-      const remainingHours = model.maxHour - elapsedSinceRun;
-      const limitDate = new Date(now.getTime() + remainingHours * 60 * 60 * 1000);
-
-      if (!minLimitDateObj || limitDate < minLimitDateObj) {
-        minLimitDateObj = limitDate;
-      }
-    });
-
-    if (minLimitDateObj) {
-      const day = minLimitDateObj.getDate();
-      const month = minLimitDateObj.getMonth() + 1;
-      const hours = String(minLimitDateObj.getHours()).padStart(2, '0');
-      const minLimitText = `${day}/${month} ${hours}h`;
-
-      const textInfo = document.getElementById('models-limit-info');
-      if (textInfo) {
-        textInfo.textContent = `Todos los modelos están disponibles hasta ${minLimitText}`;
-      }
-    }
     updateModelButtonsState();
   }
 
@@ -367,11 +343,20 @@ document.addEventListener('DOMContentLoaded', () => {
     animateModelBtn.setAttribute('aria-label', 'Pausar animación');
     animateModelBtn.setAttribute('aria-pressed', 'true');
     animateModelBtn.title = 'Pausar animación';
-    animationTimer = setInterval(advanceAnimationFrame, 750);
+    animationTimer = setInterval(advanceAnimationFrame, Number(animationSpeedSelect?.value) || 600);
   }
 
   if (animateModelBtn) {
     animateModelBtn.addEventListener('click', toggleModelAnimation);
+  }
+
+  if (animationSpeedSelect) {
+    animationSpeedSelect.addEventListener('change', () => {
+      if (animationTimer !== null) {
+        clearInterval(animationTimer);
+        animationTimer = setInterval(advanceAnimationFrame, Number(animationSpeedSelect.value) || 600);
+      }
+    });
   }
 
   function buildImageUrl(modelId, runStr, productKey, modelConfig) {
@@ -434,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return `https://modeles16.meteociel.fr/modeles/wrfnmm-eur/runs/${runStr}/nmm-${productCode}-${targetForecastHour}-0.png`;
     }
     if (modelId === 'arpege_eu') {
-      return `https://modeles7.meteociel.fr/modeles/arpege/runs/${runStr}/arpegeeur-${productCode}-${targetForecastHour}.png`;
+      return `https://modeles7.meteociel.fr/modeles/arpege/run/${runStr}/arpegeeur-${productCode}-${targetForecastHour}.png`;
     }
     if (modelId === 'ukmo_eu') {
       return `https://modeles14.meteociel.fr/modeles/ukmo/runs/${runStr}/ukmo-${productCode}-${targetForecastHour}.png`;
@@ -572,6 +557,27 @@ document.addEventListener('DOMContentLoaded', () => {
     updateImages();
   });
 
+  document.addEventListener('keydown', (event) => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+
+    const target = event.target;
+    if (target instanceof HTMLElement && (
+      target.isContentEditable || target.closest('input, textarea, select, button, a')
+    )) return;
+
+    if (event.code === 'Space') {
+      if (event.repeat) return;
+      event.preventDefault();
+      toggleModelAnimation();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      prevTimeBtn.click();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      nextTimeBtn.click();
+    }
+  });
+
   if (minus12TimeBtn) {
     minus12TimeBtn.addEventListener('click', () => {
       stopModelAnimation();
@@ -621,6 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let lastMeteogramData = null;
   let meteogramChartInstance = null;
+  let lastMeteogramLocation = null;
 
 
 const wmoIconMap = {
@@ -642,6 +649,7 @@ document.getElementById('closeMeteogramBtn').addEventListener('click', () => {
 });
 
 async function fetchMeteogramForCoords(latitude, longitude, locationName = '') {
+  lastMeteogramLocation = { latitude, longitude, locationName };
   const modelParam = document.getElementById('meteogramModelSelect').value;
   const loadingEl = document.getElementById('meteogramLoading');
   loadingEl.classList.remove('hidden');
@@ -662,6 +670,13 @@ const [modelName, extraParams] = modelParam.split('&');
     loadingEl.classList.add('hidden');
   }
 }
+
+document.getElementById('meteogramModelSelect').addEventListener('change', () => {
+  if (lastMeteogramLocation) {
+    const { latitude, longitude, locationName } = lastMeteogramLocation;
+    fetchMeteogramForCoords(latitude, longitude, locationName);
+  }
+});
 
 document.getElementById('fetchMeteogramBtn').addEventListener('click', async () => {
   const query = document.getElementById('citySearchInput').value.trim();
@@ -703,6 +718,8 @@ document.getElementById('useLocationBtn').addEventListener('click', () => {
     alert('La geolocalización no está soportada por tu navegador.');
     return;
   }
+  const loadingEl = document.getElementById('meteogramLoading');
+  loadingEl.classList.remove('hidden');
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
       const lat = pos.coords.latitude;
@@ -711,8 +728,10 @@ document.getElementById('useLocationBtn').addEventListener('click', () => {
       await fetchMeteogramForCoords(lat, lon, 'Ubicación GPS actual');
     },
     () => {
+      loadingEl.classList.add('hidden');
       alert('No se pudo obtener la ubicación GPS.');
-    }
+    },
+    GEOLOCATION_OPTIONS
   );
 });
 
@@ -1265,6 +1284,7 @@ const compareModal = document.getElementById('modelCompareModal');
       alert('La geolocalización no está soportada por tu navegador.');
       return;
     }
+    compareLoading.classList.remove('hidden');
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const lat = pos.coords.latitude;
@@ -1273,8 +1293,10 @@ const compareModal = document.getElementById('modelCompareModal');
         await fetchCompareData(lat, lon, 'Ubicación GPS actual');
       },
       () => {
+        compareLoading.classList.add('hidden');
         alert('No se pudo obtener la ubicación GPS.');
-      }
+      },
+      GEOLOCATION_OPTIONS
     );
   });
 
