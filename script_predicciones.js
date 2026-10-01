@@ -27,24 +27,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const MODELS_CONFIG = {
     peninsula: [
-      { id: 'ecmwf', name: 'ECMWF 9km', runInterval: 6, delayHours: 6, maxHour: 360, step: 1 },
-      { id: 'icon_eu', name: 'ICON-EU 7km', runInterval: 3, delayHours: 3, maxHour: 120, step: 1 },
-      { id: 'ukmo_hd', name: 'UKMO HD 10km', runInterval: 6, delayHours: 6, maxHour: 144, step: 1 },
+      { id: 'ecmwf', name: 'ECMWF 9km', runInterval: 6, delayHours: 7.25, delayHoursByRun: { 0: 7.25, 6: 7.25, 12: 7.25, 18: 7.25 }, maxHour: 360, maxHoursByRun: { 0: 360, 6: 144, 12: 360, 18: 144 }, step: 1 },
+      { id: 'icon_eu', name: 'ICON-EU 7km', runInterval: 3, delayHours: 3, delayHoursByRun: { 0: 3, 3: 3, 6: 3, 9: 3, 12: 3, 15: 3, 18: 3, 21: 3 }, maxHour: 120, step: 1 },
+      { id: 'ukmo_hd', name: 'UKMO HD 10km', runInterval: 6, delayHours: 5, delayHoursByRun: { 0: 5, 6: 5, 12: 5, 18: 5 }, maxHour: 168, maxHoursByRun: { 0: 168, 6: 66, 12: 168, 18: 66 }, step: 1 },
       { id: 'aromeIFS', name: 'AROME-IFS 2.5km', runInterval: 6, delayHours: 8.5, maxHour: 51, step: 1 },
-      { id: 'arome25', name: 'AROME 2.5km', runInterval: 6, delayHours: 6.25, maxHour: 51, step: 1 },
-      { id: 'wrf', name: 'WRF 2km', runInterval: 6, delayHours: 6, maxHour: 36, step: 1 },
-      { id: 'gfs', name: 'GFS 25km', runInterval: 6, delayHours: 6, maxHour: 384, step: 3 },
-      { id: 'arpege', name: 'ARPEGE 10km', runInterval: 6, delayHours: 6, maxHour: 114, step: 1 }
+      { id: 'arome25', name: 'AROME 2.5km', runInterval: 6, delayHours: 5.083, delayHoursByRun: { 0: 5.083, 6: 6.25, 12: 5.083, 18: 6.25 }, maxHour: 51, step: 1 },
+      { id: 'wrf', name: 'WRF 2km', runInterval: 6, delayHours: 8, delayHoursByRun: { 0: 8, 6: 8, 12: 8, 18: 8.167 }, maxHour: 36, step: 1 },
+      { id: 'gfs', name: 'GFS 25km', runInterval: 6, delayHours: 5.5, maxHour: 384, step: 3 },
+      { id: 'arpege', name: 'ARPEGE 10km', runInterval: 6, delayHours: 5, delayHoursByRun: { 0: 5, 6: 6.083, 12: 5, 18: 5 }, maxHour: 114, maxHoursByRun: { 0: 102, 6: 102, 12: 114, 18: 102 }, step: 1 }
     ],
     europa: [
-      { id: 'ecmwf_eu', name: 'ECMWF 25km', runInterval: 6, delayHours: 6, maxHour: 360, step: 3 },
-      { id: 'gfs_eu', name: 'GFS 25km', runInterval: 6, delayHours: 6, maxHour: 192, step: 6 },
-      { id: 'ukmo_eu', name: 'UKMO 10km', runInterval: 12, delayHours: 6, maxHour: 168, step: 12 },
-      { id: 'arpege_eu', name: 'ARPEGE 25km', runInterval: 6, delayHours: 6, maxHour: 114, step: 3 },
-      { id: 'wrf_eu', name: 'WRF 10km', runInterval: 6, delayHours: 6, maxHour: 120, step: 1 },
-      { id: 'icon_eu_eu', name: 'ICON-EU 7km', runInterval: 3, delayHours: 3.5, maxHour: 120, step: 1 }
+      { id: 'ecmwf_eu', name: 'ECMWF 25km', runInterval: 6, delayHours: 7.25, delayHoursByRun: { 0: 7.25, 6: 7.25, 12: 7.25, 18: 7.25 }, maxHour: 360, maxHoursByRun: { 0: 360, 6: 144, 12: 360, 18: 144 }, step: 3 },
+      { id: 'gfs_eu', name: 'GFS 25km', runInterval: 6, delayHours: 5.5, maxHour: 192, step: 6 },
+      { id: 'ukmo_eu', name: 'UKMO 10km', runInterval: 6, delayHours: 5, maxHour: 168, maxHoursByRun: { 0: 168, 6: 60, 12: 168, 18: 60 }, step: 12 },
+      { id: 'arpege_eu', name: 'ARPEGE 25km', runInterval: 6, delayHours: 6, maxHour: 114, maxHoursByRun: { 0: 102, 6: 102, 12: 114, 18: 102 }, step: 3 },
+      { id: 'wrf_eu', name: 'WRF 10km', runInterval: 6, delayHours: 5, delayHoursByRun: { 0: 5, 6: 5, 12: 5, 18: 5 }, maxHour: 120, step: 1 },
+      { id: 'icon_eu_eu', name: 'ICON-EU 7km', runInterval: 3, delayHours: 3.5, delayHoursByRun: { 0: 3.5, 3: 3.5, 6: 3.5, 9: 3.5, 12: 3.5, 15: 3.5, 18: 3.5, 21: 3.5 }, maxHour: 120, step: 1 }
     ]
   };
+
+  function getModelDelayHours(model, runHourUtc) {
+    return model.delayHoursByRun?.[runHourUtc] ?? model.delayHours;
+  }
+
+  function getModelMaxHour(model, runHourUtc) {
+    return model.maxHoursByRun?.[runHourUtc] ?? model.maxHour;
+  }
 
   const PRODUCTS_MAP = {
     aromeIFS: { precip: '1', precip_acc: '25', clouds: '55', t2m: '0', wind10m: '3', gust10m: '11', cape: '28' },
@@ -64,13 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
     wrf_eu: { precip: '2', t2m: '0', t850: '16', clouds: '4', t500: '21', precip_acc: '25', agua_precip: '46', wind10m: '14', jetstream: '9', geop500: '2', cape: '28', wind700_850: '35', gust10m: '11', wind10m: '3', precip: '1',}
   };
 
-  function getModelLimitDate(modelLimitHours, runHourUtc) {
-    const now = new Date();
-    const currentUtcHour = now.getUTCHours() + (now.getUTCMinutes() / 60);
-    let elapsedSinceRun = currentUtcHour - runHourUtc;
-    if (elapsedSinceRun < 0) elapsedSinceRun += 24;
+  function getRunElapsedHours(runStr, now = new Date()) {
+    const runDate = new Date(Date.UTC(
+      Number(runStr.substring(0, 4)),
+      Number(runStr.substring(4, 6)) - 1,
+      Number(runStr.substring(6, 8)),
+      Number(runStr.substring(8, 10))
+    ));
+    return (now.getTime() - runDate.getTime()) / 3600000;
+  }
 
-    const remainingHours = modelLimitHours - elapsedSinceRun;
+  function getModelLimitDate(modelLimitHours, runStr) {
+    const now = new Date();
+    const remainingHours = modelLimitHours - getRunElapsedHours(runStr, now);
     const limitDate = new Date(now.getTime() + remainingHours * 60 * 60 * 1000);
 
     const day = limitDate.getDate();
@@ -80,24 +94,28 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${day}/${month} ${hours}h`;
   }
 
-  function getLatestAvailableRun(runInterval, delayHours) {
+  function getLatestAvailableRun(model) {
     const now = new Date();
-    const utcDate = new Date(now.getTime() - delayHours * 3600 * 1000);
+    const candidate = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      Math.floor(now.getUTCHours() / model.runInterval) * model.runInterval
+    ));
 
-    let year = utcDate.getUTCFullYear();
-    let month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
-    let day = String(utcDate.getUTCDate()).padStart(2, '0');
-    let hour = utcDate.getUTCHours();
-
-    hour = Math.floor(hour / runInterval) * runInterval;
-    let hourStr = String(hour).padStart(2, '0');
-
-    return `${year}${month}${day}${hourStr}`;
+    while (true) {
+      const runHourUtc = candidate.getUTCHours();
+      const availableAt = candidate.getTime() + getModelDelayHours(model, runHourUtc) * 3600000;
+      if (now.getTime() >= availableAt) {
+        return `${candidate.getUTCFullYear()}${String(candidate.getUTCMonth() + 1).padStart(2, '0')}${String(candidate.getUTCDate()).padStart(2, '0')}${String(runHourUtc).padStart(2, '0')}`;
+      }
+      candidate.setUTCHours(candidate.getUTCHours() - model.runInterval);
+    }
   }
 
-  function generateAvailableRuns(runInterval, delayHours) {
+  function generateAvailableRuns(model) {
     const runs = [];
-    const latestRunStr = getLatestAvailableRun(runInterval, delayHours);
+    const latestRunStr = getLatestAvailableRun(model);
 
     let year = parseInt(latestRunStr.substring(0, 4));
     let month = parseInt(latestRunStr.substring(4, 6)) - 1;
@@ -117,14 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
         label: `${d}/${m} ${h}Z`
       });
 
-      currentDate.setUTCHours(currentDate.getUTCHours() - runInterval);
+      currentDate.setUTCHours(currentDate.getUTCHours() - model.runInterval);
     }
 
     return runs;
   }
 
   function getModelUpdateInfo(model) {
-    const latestRun = getLatestAvailableRun(model.runInterval, model.delayHours);
+    const latestRun = getLatestAvailableRun(model);
     const latestRunDate = new Date(Date.UTC(
       Number(latestRun.substring(0, 4)),
       Number(latestRun.substring(4, 6)) - 1,
@@ -135,11 +153,11 @@ document.addEventListener('DOMContentLoaded', () => {
       latestRunDate.getTime() + model.runInterval * 3600000
     );
     const nextUpdateDate = new Date(
-      nextCycleDate.getTime() + model.delayHours * 3600000
+      nextCycleDate.getTime() + getModelDelayHours(model, nextCycleDate.getUTCHours()) * 3600000
     );
     const cycleHour = String(nextCycleDate.getUTCHours()).padStart(2, '0');
     const updateTime = `${String(nextUpdateDate.getUTCHours()).padStart(2, '0')}:${String(nextUpdateDate.getUTCMinutes()).padStart(2, '0')}Z`;
-    const delayMinutes = Math.round(model.delayHours * 60);
+    const delayMinutes = Math.round(getModelDelayHours(model, nextCycleDate.getUTCHours()) * 60);
     const delayHours = Math.floor(delayMinutes / 60);
     const remainingDelayMinutes = delayMinutes % 60;
     const delayLabel = remainingDelayMinutes === 0
@@ -184,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     models.forEach(model => {
-      const runs = generateAvailableRuns(model.runInterval, model.delayHours);
+      const runs = generateAvailableRuns(model);
 
       const wrapper = document.createElement('div');
       wrapper.className = 'model-option';
@@ -265,10 +283,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const runSelect = document.getElementById(`run-${model.id}`);
-      const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
+      const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model);
       const runHourUtc = parseInt(selectedRunStr.substring(8, 10), 10);
 
-      const limitText = getModelLimitDate(model.maxHour, runHourUtc);
+      const limitText = getModelLimitDate(getModelMaxHour(model, runHourUtc), selectedRunStr);
       btn.innerHTML = `${model.name}<br><small>Hasta ${limitText}</small>`;
 
       btn.addEventListener('click', () => {
@@ -324,12 +342,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return currentStep;
   }
 
-  function getValidForecastHours(model, productKey) {
+  function getValidForecastHours(model, productKey, runHourUtc) {
     const forecastHours = new Set();
-    for (let targetHour = 1; targetHour <= model.maxHour; targetHour++) {
+    const maxHour = getModelMaxHour(model, runHourUtc);
+    for (let targetHour = 1; targetHour <= maxHour; targetHour++) {
       const step = getForecastStep(model.id, productKey, targetHour, model);
       const validHour = snapToValidHour(targetHour, step);
-      if (validHour > 0 && validHour <= model.maxHour) forecastHours.add(validHour);
+      if (validHour > 0 && validHour <= maxHour) forecastHours.add(validHour);
     }
     return [...forecastHours].sort((a, b) => a - b);
   }
@@ -350,14 +369,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function advanceAnimationFrame() {
     const models = MODELS_CONFIG[regionSelect.value] || [];
     const model = models.find(item => item.id === activeModelId);
-    const forecastHours = model ? getValidForecastHours(model, productSelect.value) : [];
-    if (!model || forecastHours.length === 0) {
+    if (!model) {
       stopModelAnimation();
       return;
     }
 
     const runSelect = document.getElementById(`run-${model.id}`);
-    const runStr = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
+    const runStr = runSelect ? runSelect.value : getLatestAvailableRun(model);
+    const runHourUtc = parseInt(runStr.substring(8, 10), 10);
+    const forecastHours = getValidForecastHours(model, productSelect.value, runHourUtc);
+    if (forecastHours.length === 0) {
+      stopModelAnimation();
+      return;
+    }
     const runDate = new Date(Date.UTC(
       Number(runStr.slice(0, 4)),
       Number(runStr.slice(4, 6)) - 1,
@@ -422,7 +446,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentStep = getForecastStep(modelId, productKey, targetForecastHour, modelConfig);
     targetForecastHour = snapToValidHour(targetForecastHour, currentStep);
 
-    if (targetForecastHour > modelConfig.maxHour) return null;
+    const maxHour = getModelMaxHour(modelConfig, runHour);
+    if (targetForecastHour > maxHour) return null;
 
     if (modelId === 'aromeIFS') {
       return `https://modeles7.meteociel.fr/modeles/aromeifs_sp1/runs/${runStr}/aromeifs-${productCode}-${targetForecastHour}-0.png`;
@@ -519,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const runSelect = document.getElementById(`run-${model.id}`);
-    const selectedRun = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
+    const selectedRun = runSelect ? runSelect.value : getLatestAvailableRun(model);
 
     const imgUrl = buildImageUrl(model.id, selectedRun, selectedProduct, model);
 
@@ -1094,15 +1119,11 @@ function renderMeteogram(data) {
 
     if (model) {
       const runSelect = document.getElementById(`run-${model.id}`);
-      const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model.runInterval, model.delayHours);
+      const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model);
       const runHourUtc = parseInt(selectedRunStr.substring(8, 10), 10);
 
       const now = new Date();
-      const currentUtcHour = now.getUTCHours() + (now.getUTCMinutes() / 60);
-      let elapsedSinceRun = currentUtcHour - runHourUtc;
-      if (elapsedSinceRun < 0) elapsedSinceRun += 24;
-
-      const remainingHours = model.maxHour - elapsedSinceRun;
+      const remainingHours = getModelMaxHour(model, runHourUtc) - getRunElapsedHours(selectedRunStr, now);
       const limitDate = new Date(now.getTime() + remainingHours * 60 * 60 * 1000);
 
       const warningThresholdMs = 3 * 60 * 60 * 1000;
