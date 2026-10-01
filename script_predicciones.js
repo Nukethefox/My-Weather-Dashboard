@@ -27,22 +27,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const MODELS_CONFIG = {
     peninsula: [
-      { id: 'ecmwf', name: 'ECMWF 9KM', runInterval: 6, delayHours: 6, maxHour: 360, step: 1 },
-      { id: 'icon_eu', name: 'ICON-EU', runInterval: 3, delayHours: 3, maxHour: 120, step: 1 },
-      { id: 'ukmo_hd', name: 'UKMO HD', runInterval: 6, delayHours: 6, maxHour: 144, step: 1 },
-      { id: 'aromeIFS', name: 'AROME-IFS 2.5KM', runInterval: 6, delayHours: 6, maxHour: 51, step: 1 },
-      { id: 'arome25', name: 'AROME 2.5KM', runInterval: 6, delayHours: 6, maxHour: 51, step: 1 },
-      { id: 'wrf', name: 'WRF 2KM', runInterval: 6, delayHours: 6, maxHour: 36, step: 1 },
-      { id: 'gfs', name: 'GFS', runInterval: 6, delayHours: 6, maxHour: 384, step: 3 },
-      { id: 'arpege', name: 'ARPEGE', runInterval: 6, delayHours: 6, maxHour: 114, step: 1 }
+      { id: 'ecmwf', name: 'ECMWF 9km', runInterval: 6, delayHours: 6, maxHour: 360, step: 1 },
+      { id: 'icon_eu', name: 'ICON-EU 7km', runInterval: 3, delayHours: 3, maxHour: 120, step: 1 },
+      { id: 'ukmo_hd', name: 'UKMO HD 10km', runInterval: 6, delayHours: 6, maxHour: 144, step: 1 },
+      { id: 'aromeIFS', name: 'AROME-IFS 2.5km', runInterval: 6, delayHours: 8.5, maxHour: 51, step: 1 },
+      { id: 'arome25', name: 'AROME 2.5km', runInterval: 6, delayHours: 6.25, maxHour: 51, step: 1 },
+      { id: 'wrf', name: 'WRF 2km', runInterval: 6, delayHours: 6, maxHour: 36, step: 1 },
+      { id: 'gfs', name: 'GFS 25km', runInterval: 6, delayHours: 6, maxHour: 384, step: 3 },
+      { id: 'arpege', name: 'ARPEGE 10km', runInterval: 6, delayHours: 6, maxHour: 114, step: 1 }
     ],
     europa: [
-      { id: 'ecmwf_eu', name: 'ECMWF Europa', runInterval: 6, delayHours: 6, maxHour: 360, step: 3 },
-      { id: 'gfs_eu', name: 'GFS Europa', runInterval: 6, delayHours: 6, maxHour: 192, step: 6 },
-      { id: 'ukmo_eu', name: 'UKMO Europa', runInterval: 12, delayHours: 6, maxHour: 168, step: 12 },
-      { id: 'arpege_eu', name: 'ARPEGE Europa', runInterval: 6, delayHours: 6, maxHour: 114, step: 3 },
-      { id: 'wrf_eu', name: 'WRF Europa', runInterval: 6, delayHours: 6, maxHour: 120, step: 1 },
-      { id: 'icon_eu_eu', name: 'ICON-EU Europa', runInterval: 3, delayHours: 2, maxHour: 120, step: 1 }
+      { id: 'ecmwf_eu', name: 'ECMWF 25km', runInterval: 6, delayHours: 6, maxHour: 360, step: 3 },
+      { id: 'gfs_eu', name: 'GFS 25km', runInterval: 6, delayHours: 6, maxHour: 192, step: 6 },
+      { id: 'ukmo_eu', name: 'UKMO 10km', runInterval: 12, delayHours: 6, maxHour: 168, step: 12 },
+      { id: 'arpege_eu', name: 'ARPEGE 25km', runInterval: 6, delayHours: 6, maxHour: 114, step: 3 },
+      { id: 'wrf_eu', name: 'WRF 10km', runInterval: 6, delayHours: 6, maxHour: 120, step: 1 },
+      { id: 'icon_eu_eu', name: 'ICON-EU 7km', runInterval: 3, delayHours: 3.5, maxHour: 120, step: 1 }
     ]
   };
 
@@ -123,6 +123,40 @@ document.addEventListener('DOMContentLoaded', () => {
     return runs;
   }
 
+  function getModelUpdateInfo(model) {
+    const latestRun = getLatestAvailableRun(model.runInterval, model.delayHours);
+    const latestRunDate = new Date(Date.UTC(
+      Number(latestRun.substring(0, 4)),
+      Number(latestRun.substring(4, 6)) - 1,
+      Number(latestRun.substring(6, 8)),
+      Number(latestRun.substring(8, 10))
+    ));
+    const nextCycleDate = new Date(
+      latestRunDate.getTime() + model.runInterval * 3600000
+    );
+    const nextUpdateDate = new Date(
+      nextCycleDate.getTime() + model.delayHours * 3600000
+    );
+    const cycleHour = String(nextCycleDate.getUTCHours()).padStart(2, '0');
+    const updateTime = `${String(nextUpdateDate.getUTCHours()).padStart(2, '0')}:${String(nextUpdateDate.getUTCMinutes()).padStart(2, '0')}Z`;
+    const delayMinutes = Math.round(model.delayHours * 60);
+    const delayHours = Math.floor(delayMinutes / 60);
+    const remainingDelayMinutes = delayMinutes % 60;
+    const delayLabel = remainingDelayMinutes === 0
+      ? `${delayHours}h`
+      : `${delayHours}h ${remainingDelayMinutes}min`;
+    const currentDate = new Date();
+    const nextDateLabel = nextUpdateDate.getUTCDate() !== currentDate.getUTCDate() ||
+      nextUpdateDate.getUTCMonth() !== currentDate.getUTCMonth()
+      ? ` (${String(nextUpdateDate.getUTCDate()).padStart(2, '0')}/${String(nextUpdateDate.getUTCMonth() + 1).padStart(2, '0')})`
+      : '';
+
+    return {
+      summary: `Update cada ${model.runInterval}h con ~${delayLabel} de demora\nCiclo ${cycleHour}Z `,
+      availability: `disponible a las ~${updateTime}${nextDateLabel}`
+    };
+  }
+
   function renderModelCheckboxes() {
     modelsContainer.innerHTML = '';
     const region = regionSelect.value;
@@ -169,8 +203,17 @@ document.addEventListener('DOMContentLoaded', () => {
         runSelect.appendChild(opt);
       });
 
+      const updateInfo = document.createElement('small');
+      updateInfo.className = 'model-update-info';
+      const updateDetails = getModelUpdateInfo(model);
+      updateInfo.append(document.createTextNode(updateDetails.summary));
+      const availability = document.createElement('strong');
+      availability.textContent = updateDetails.availability;
+      updateInfo.append(availability);
+
       wrapper.appendChild(label);
       wrapper.appendChild(runSelect);
+      wrapper.appendChild(updateInfo);
       modelsContainer.appendChild(wrapper);
 
       runSelect.addEventListener('change', () => {
