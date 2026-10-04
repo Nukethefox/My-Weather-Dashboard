@@ -32,7 +32,7 @@
           <option value="sst">Temperatura del mar</option>
         </select>
       </div>
-      <p style="color: #b0b0b0; text-align: center;">Datos reales recogidos por estaciones meteorológicas METAR/personales (excepto temperatura del mar, que es calculada). <br>Haz clic para abrir MeteoCiel y ver detalles de cada punto.</p>
+      <p style="color: #b0b0b0; text-align: center;">Datos reales recogidos por estaciones meteorológicas METAR/aficionadas (excepto temperatura del mar, que es calculada). <br>Haz clic para abrir MeteoCiel y ver detalles de cada punto.</p>
       <div class="image-wrapper">
         <a id="obs-link" href="https://www.meteociel.fr/observations-meteo/temps-reel.php?region=sp" target="_blank" rel="noopener noreferrer">
           <img id="obs-image" src="https://www.meteociel.fr/cartes_obs/temp2_sp_1h.png" alt="Mapa de observación meteorológica">
@@ -78,9 +78,9 @@
       <div class="radar-controls">
         <span class="radar-title">Radar de precipitación</span>
         <select id="radar-animation-speed-select" aria-label="Velocidad de animación del radar">
-          <option value="1000">Lento</option>
-          <option value="650">Medio</option>
-          <option value="400" selected>Rápido</option>
+          <option value="1000">Lenta</option>
+          <option value="650">Media</option>
+          <option value="400" selected>Rápida</option>
         </select>
         <span id="radar-timestamp">Cargando...</span>
         <div class="radar-buttons">
@@ -93,16 +93,18 @@
           <span>Nubes (NASA)</span>
         </label>
       </div>
+      <p class="radar-keyboard-help" style="text-align: center;">Usa [←][→] para retroceder/avanzar 10 minutos, y [Espacio] para reproducir/pausar.</p>
       <div id="radar-map"></div>
       <div class="radar-legend" aria-label="Leyenda de intensidad de lluvia">
-        <div class="radar-legend-title">Intensidad de lluvia <span>(mm/h aproximados según dBZ)</span></div>
+        <div class="radar-legend-title">Reflectividad del radar <span>(transiciones de color en dBZ)</span></div>
         <div class="radar-legend-ranges">
-          <div class="radar-legend-row"><span class="radar-legend-swatch legend-blue"></span><span>Azul: 0,32–5,5 mm/h (15–34,9 dBZ)</span></div>
-          <div class="radar-legend-row"><span class="radar-legend-swatch legend-green"></span><span>Verde: 5,5–19 mm/h (34,9–43,5 dBZ)</span></div>
-          <div class="radar-legend-row"><span class="radar-legend-swatch legend-yellow"></span><span>Amarillo: 19–35 mm/h (43,5–47,7 dBZ)</span></div>
-          <div class="radar-legend-row"><span class="radar-legend-swatch legend-red"></span><span>Rojo: 35–55 mm/h (47,7–50,9 dBZ)</span></div>
-          <div class="radar-legend-row"><span class="radar-legend-swatch legend-pink"></span><span>Rosa: 55–100 mm/h (50,9–55 dBZ)</span></div>
-          <div class="radar-legend-row"><span class="radar-legend-swatch legend-white"></span><span>Blanco: más de 100 mm/h (más de 55 dBZ)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-light-blue"></span><span>Azul claro: 15 dBZ (0.3 mm/h)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-blue"></span><span>Azul: 27,5 dBZ (1.5 mm/h)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-green"></span><span>Verde: 32,5 dBZ (3 mm/h)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-yellow"></span><span>Amarillo: 40,75 dBZ (12 mm/h)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-red"></span><span>Rojo: 45,3 dBZ (23 mm/h)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-pink"></span><span>Rosa: 50,2 dBZ (48 mm/h)</span></div>
+          <div class="radar-legend-row"><span class="radar-legend-swatch legend-white"></span><span>Blanco: +55 dBZ (+100 mm/h)</span></div>
         </div>
       </div>
     </div>
