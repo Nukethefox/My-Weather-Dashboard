@@ -432,6 +432,14 @@ body {
   border-color: #38bdf8;
 }
 
+.radar-keyboard-help {
+  margin: 0;
+  padding: 0.45rem 1rem;
+  border-bottom: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
 #radar-map {
   width: 100%;
   height: calc(100vh - 200px);
@@ -498,11 +506,12 @@ body {
   border-radius: 2px;
 }
 
-.legend-blue { background: #93bdff; }
-.legend-green { background: #37c137; }
-.legend-yellow { background: #ffed00; }
-.legend-red { background: #ff0000; }
-.legend-pink { background: #de83ac; }
+.legend-light-blue { background: #89aeff; }
+.legend-blue { background: #5d83ff; }
+.legend-green { background: #00bd00; }
+.legend-yellow { background: #ffe600; }
+.legend-red { background: #bf1010; }
+.legend-pink { background: #ff82dc; }
 .legend-white { background: #fff; border: 1px solid #91a4b8; }
 
 @media (max-width: 520px) {
