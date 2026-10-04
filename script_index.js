@@ -543,11 +543,11 @@ async function fetchMetarData() {
   `.trim().split(/\s+/).map(hex => hex.match(/../g).map(value => parseInt(value, 16)));
 
   const CUSTOM_RADAR_STOPS = [
-    [15, 154, 191, 252, 255], [32, 125, 153, 255, 255],
-    [34.8561, 45, 214, 97, 255], [38.2782, 24, 173, 19, 255],
-    [43.4704, 255, 237, 0, 255], [47.7154, 255, 0, 0, 255],
-    [50.8561, 240, 143, 219, 255], [55.0103, 255, 255, 255, 255],
-    [68, 255, 255, 255, 255], [100, 255, 255, 255, 255],
+    [0, 189, 225, 255, 255], [27.5, 93, 131, 255, 255],
+    [32.5, 0, 189, 0, 255], [40.75, 255, 230, 0, 255],
+    [45.3, 191, 16, 16, 255], [50.2, 255, 130, 220, 255],
+    [55, 255, 255, 255, 255], [68, 255, 255, 255, 255],
+    [100, 255, 255, 255, 255],
     [101, 0, 0, 0, 0], [255, 0, 0, 0, 0]
   ];
 
@@ -768,6 +768,27 @@ async function fetchMetarData() {
   document.getElementById("radar-next-btn").addEventListener("click", () => {
     stopAnimation();
     showFrame(animationPosition + 1);
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+
+    const target = event.target;
+    if (target instanceof HTMLElement && (
+      target.isContentEditable || target.closest('input, textarea, select, button, a')
+    )) return;
+
+    if (event.code === 'Space') {
+      if (event.repeat) return;
+      event.preventDefault();
+      playStopAnimation();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      document.getElementById('radar-prev-btn').click();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      document.getElementById('radar-next-btn').click();
+    }
   });
 
   map.on('movestart', clearLayerCache);
