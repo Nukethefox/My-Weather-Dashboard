@@ -32,7 +32,10 @@
         <label>Producto:</label>
         <select id="product-select">
           <option value="precip">Precipitaciones</option>
+          <option value="precip_type">Tipo de precipitación</option>
           <option value="precip_acc">Precipitación acumulada</option>
+          <option value="snow_acc">Nieve acumulada</option>
+          <option value="snow_depth">Capa de nieve actual</option>
           <option value="agua_precip">Agua precipitable</option>
           <option id="opt-vertical-velocity" value="velocidad_vertical">Velocidad vertical 700hPa (≈3000m)</option>
           <option value="clouds">Nubosidad</option>
@@ -46,7 +49,7 @@
           <option id="opt-jetstream" value="jetstream" style="display: none;">JetStream 300hPa (≈9000m)</option>
           <option value="geop500">Presión y geopotencial 500hPa (≈5500m)</option>
           <option value="cape">CAPE</option>
-          <option value="anom850">Anomalía Temp 850hPa (solo Europa)</option>
+          <option id="opt-anom850" value="anom850" style="display: none;">Anomalía Temp 850hPa</option>
         </select>
       </div>
       <div class="panel-group">

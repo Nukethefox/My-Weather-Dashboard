@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const MODELS_CONFIG = {
     peninsula: [
-      { id: 'ecmwf', name: 'ECMWF 9km', runInterval: 6, delayHours: 7.25, delayHoursByRun: { 0: 7.25, 6: 7.25, 12: 7.25, 18: 7.25 }, maxHour: 360, step: 1 },
+      { id: 'ecmwf', name: 'ECMWF', defaultVariant: 'classic', variantOptions: { classic: '9 km', aifs: 'AIFS 25 km' }, variantLabel: 'Variante ECMWF', variantNames: { aifs: 'ECMWF AIFS 25km' }, variants: { classic: {}, aifs: {} }, runInterval: 6, delayHours: 7.25, delayHoursByRun: { 0: 7.25, 6: 7.25, 12: 7.25, 18: 7.25 }, maxHour: 360, step: 1 },
       { id: 'icon_eu', name: 'ICON-EU 7km', runInterval: 3, delayHours: 3, delayHoursByRun: { 0: 3, 3: 3, 6: 3, 9: 3, 12: 3, 15: 3, 18: 3, 21: 3 }, maxHour: 120, maxHoursByRun: { 0: 120, 3: 30, 6: 120, 9: 30, 12: 120, 15: 30, 18: 120, 21: 30 }, step: 1 },
       { id: 'ukmo_hd', name: 'UKMO HD 10km', runInterval: 6, delayHours: 5, delayHoursByRun: { 0: 5, 6: 5, 12: 4.5, 18: 5 }, maxHour: 168, maxHoursByRun: { 0: 168, 6: 66, 12: 168, 18: 66 }, step: 1 },
       { id: 'aromeIFS', name: 'AROME', defaultVariant: 'classic', runHoursByVariant: { classic: [0, 3, 6, 9, 12, 15, 18, 21] }, variants: { classic: { delayHours: 3.75, delayHoursByRun: { 0: 5.083, 6: 6.25, 12: 5.083, 18: 4.5 } }, ifs: { delayHours: 7.5 } }, maxHour: 51, runInterval: 6, step: 1 },
@@ -38,8 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: 'arpege', name: 'ARPEGE 10km', runInterval: 6, delayHours: 5, delayHoursByRun: { 0: 5, 6: 6.083, 12: 4.5, 18: 5 }, maxHour: 114, maxHoursByRun: { 0: 102, 6: 102, 12: 114, 18: 102 }, step: 1 }
     ],
     europa: [
-      { id: 'ecmwf_eu', name: 'ECMWF 25km', runInterval: 6, delayHours: 7.25, delayHoursByRun: { 0: 7.25, 6: 7.25, 12: 7.25, 18: 7.25 }, maxHour: 360, step: 3 },
-      { id: 'gfs_eu', name: 'GFS 25km', runInterval: 6, delayHours: 5.5, maxHour: 192, step: 6 },
+      { id: 'ecmwf_eu', name: 'ECMWF 25km', defaultVariant: 'classic', variantOptions: { classic: 'Clásico 25 km', aifs: 'AIFS 25 km' }, variantLabel: 'Variante ECMWF', variantNames: { aifs: 'ECMWF AIFS 25km' }, variants: { classic: {}, aifs: {} }, runInterval: 6, delayHours: 7.25, delayHoursByRun: { 0: 7.25, 6: 7.25, 12: 7.25, 18: 7.25 }, maxHour: 360, step: 3 },
+      { id: 'gfs_eu', name: 'GFS 25km', runInterval: 6, delayHours: 5.5, maxHour: 384, step: 6 },
       { id: 'ukmo_eu', name: 'UKMO 10km', runInterval: 6, delayHours: 5, maxHour: 168, maxHoursByRun: { 0: 168, 6: 60, 12: 168, 18: 60 }, step: 12 },
       { id: 'arpege_eu', name: 'ARPEGE 25km', runInterval: 6, delayHours: 6, maxHour: 114, maxHoursByRun: { 0: 102, 6: 102, 12: 114, 18: 102 }, step: 3 },
       { id: 'wrf_eu', name: 'WRF 10km', runInterval: 6, delayHours: 5, delayHoursByRun: { 0: 5, 6: 5, 12: 5, 18: 5 }, maxHour: 120, step: 1 },
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function getModelVariant(modelId) {
-    const model = MODELS_CONFIG.peninsula.find(item => item.id === modelId);
+    const model = [...MODELS_CONFIG.peninsula, ...MODELS_CONFIG.europa].find(item => item.id === modelId);
     return document.getElementById(`variant-${modelId}`)?.value ?? model?.defaultVariant;
   }
 
@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (model.id === 'aromeIFS') {
       return getModelVariant(model.id) === 'ifs' ? 'AROME-IFS 2.5km' : 'AROME clásico 1.3km';
     }
-    return model.name;
+    return model.variantNames?.[getModelVariant(model.id)] ?? model.name;
   }
 
   function getModelDelayHours(model, runHourUtc) {
@@ -134,18 +134,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const ageMinutes = Math.max(0, Math.floor((now.getTime() - runDate.getTime()) / 60000));
     const ageHours = Math.floor(ageMinutes / 60);
     const remainingMinutes = ageMinutes % 60;
-    const verification = modelRunVerification.get(model.id) || { state: 'checking' };
+    const productKey = productSelect.value;
+    const cachedVerification = modelRunVerification.get(getVerificationCacheKey(model, productKey));
+    const supportsProduct = getProductCode(model.id, productKey) !== undefined;
+    const verification = !supportsProduct
+      ? { state: 'unsupported' }
+      : cachedVerification || { state: 'unchecked' };
 
     const ageLabel = document.createElement('span');
     ageLabel.textContent = `Salida calculada hace ${ageHours} h ${remainingMinutes} min`;
     const freshnessLabel = document.createElement('span');
     freshnessLabel.className = `model-freshness-${verification.state}`;
     const preparingRunHour = verification.preparingRun?.slice(8, 10);
+    const verifiedRunHour = verification.verifiedRun?.slice(8, 10) ?? '';
+    const completeLimit = verification.verifiedRun
+      ? getModelLimitDate(getModelMaxHour(model, Number(verifiedRunHour)), verification.verifiedRun)
+      : '';
     const statusLabels = {
-      checking: 'Comprobando despliegue del modelo...',
-      current: 'Mostrando última salida completa',
-      preparing: `Ciclo ${preparingRunHour ?? ''}Z en preparación`,
-      unavailable: 'No se pudo verificar el ciclo completo'
+      checking: 'Comprobando ciclo...',
+      current: `Ciclo ${verifiedRunHour}Z completo (hasta ${completeLimit})`,
+      processing: `Mostrando ciclo ${verifiedRunHour}Z; procesando ciclo ${preparingRunHour ?? ''}Z`,
+      partial: `Ciclo ${verifiedRunHour}Z parcialmente disponible (hasta ${verification.verifiedRun ? getModelLimitDate(getEffectiveMaxHour(model, verification.verifiedRun), verification.verifiedRun) : ''}), anterior no disponible`,
+      unavailable: 'No se pudo verificar el ciclo',
+      unchecked: 'Ciclo sin comprobar',
+      unsupported: 'Producto no disponible para este modelo'
     };
     freshnessLabel.textContent = statusLabels[verification.state] || statusLabels.checking;
     info.replaceChildren(ageLabel, document.createElement('br'), freshnessLabel);
@@ -187,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const runHour = Number(runStr.slice(8, 10));
     const elapsedHours = Math.floor(getRunElapsedHours(runStr));
-    const remainingForecastHours = getModelMaxHour(model, runHour) - elapsedHours;
+    const remainingForecastHours = getEffectiveMaxHour(model, runStr) - elapsedHours;
     const maxSliderValue = Math.max(0, Math.min(239, remainingForecastHours - 1));
     const limitPercent = (maxSliderValue / 239) * 100;
     const colors = RUN_HOUR_COLORS[runStr.slice(8, 10)];
@@ -200,7 +212,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let runDetectionGeneration = 0;
   let lastRunDetectionAt = 0;
   const modelRunVerification = new Map();
-  const RUN_DETECTION_INTERVAL_MS = 5 * 60 * 1000;
+  const modelRunVerificationInFlight = new Map();
+  const RUN_DETECTION_INTERVAL_MS = 15 * 60 * 1000;
+  const INACTIVITY_RECHECK_MS = 10 * 60 * 1000;
 
   function formatRunString(date) {
     return `${date.getUTCFullYear()}${String(date.getUTCMonth() + 1).padStart(2, '0')}${String(date.getUTCDate()).padStart(2, '0')}${String(date.getUTCHours()).padStart(2, '0')}`;
@@ -229,26 +243,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function getProbeProductKey(modelId) {
-    const products = PRODUCTS_MAP[modelId] || {};
-    return products.precip !== undefined ? 'precip' : Object.keys(products)[0];
+  function getVerificationCacheKey(model, productKey) {
+    const latestCandidate = getRunCandidates(model, 1)[0] || '';
+    return `${model.id}:${getModelVariant(model.id) || ''}:${productKey}:${latestCandidate}`;
   }
 
-  function probeImage(url) {
+  // Devuelve 'ok', 'missing' (la imagen no existe) o 'error' (timeout: no se sabe)
+  function probeImageOnce(url) {
     return new Promise(resolve => {
       const image = new Image();
-      const timeout = setTimeout(() => finish(false), 2500);
-      const finish = loaded => {
+      const timeout = setTimeout(() => finish('error'), 5000);
+      const finish = result => {
         clearTimeout(timeout);
         image.onload = null;
         image.onerror = null;
-        resolve(loaded);
+        resolve(result);
       };
 
-      image.onload = () => finish(true);
-      image.onerror = () => finish(false);
+      image.onload = () => finish('ok');
+      image.onerror = () => finish('missing');
       image.src = `${url}${url.includes('?') ? '&' : '?'}run-check=${Date.now()}`;
     });
+  }
+
+  async function probeImage(url) {
+    const result = await probeImageOnce(url);
+    return result === 'error' ? probeImageOnce(url) : result;
   }
 
   function refreshRunOptions(model, verifiedRun) {
@@ -282,98 +302,238 @@ document.addEventListener('DOMContentLoaded', () => {
     updateModelOptionRunColor(model);
   }
 
-  async function verifyModelRun(model, generation) {
-    if (generation !== runDetectionGeneration) return;
-    const checkedVariant = getModelVariant(model.id);
-    modelRunVerification.set(model.id, { state: 'checking' });
-    updateModelFreshnessInfo(model);
+  function getRunElapsedHoursFloor(runStr) {
+    const runDate = Date.UTC(
+      Number(runStr.slice(0, 4)),
+      Number(runStr.slice(4, 6)) - 1,
+      Number(runStr.slice(6, 8)),
+      Number(runStr.slice(8, 10))
+    );
+    return Math.floor((Date.now() - runDate) / 3600000);
+  }
 
-    const productKey = getProbeProductKey(model.id);
-    if (!productKey) return;
+  function getVerificationHours(model, productKey, runStr) {
+    const runHourUtc = Number(runStr.slice(8, 10));
+    const verificationMaxHour = (model.id === 'ecmwf' || model.id === 'ecmwf_eu') &&
+      getModelVariant(model.id) !== 'aifs' &&
+      (runHourUtc === 6 || runHourUtc === 18)
+      ? 144
+      : getModelMaxHour(model, runHourUtc);
+    const hours = getValidForecastHours(model, productKey, runHourUtc, verificationMaxHour);
+    if (!hours.length) return null;
 
-    let preparingRun = null;
-    for (const runStr of getRunCandidates(model)) {
-      if (generation !== runDetectionGeneration) return;
-      const runHourUtc = Number(runStr.slice(8, 10));
-      const verificationMaxHour = (model.id === 'ecmwf' || model.id === 'ecmwf_eu') &&
-        (runHourUtc === 6 || runHourUtc === 18)
-        ? 144
-        : getModelMaxHour(model, runHourUtc);
-      const validForecastHours = getValidForecastHours(model, productKey, runHourUtc, verificationMaxHour);
-      const firstForecastHour = validForecastHours[0];
-      const finalForecastHour = validForecastHours.at(-1);
-      if (firstForecastHour === undefined || finalForecastHour === undefined) continue;
+    // Primer plazo útil: el primero que no esté ya en el pasado (ahora + 1h)
+    const firstUseful = hours.findIndex(hour => hour >= getRunElapsedHoursFloor(runStr) + 1);
+    if (firstUseful === -1) return null;
+    return hours.slice(firstUseful);
+  }
 
-      const firstImageUrl = buildImageUrl(model.id, runStr, productKey, model, firstForecastHour);
-      if (!firstImageUrl || !await probeImage(firstImageUrl)) continue;
-      if (generation !== runDetectionGeneration || getModelVariant(model.id) !== checkedVariant) return;
+  function probeRunHour(model, runStr, productKey, forecastHour) {
+    const url = buildImageUrl(model.id, runStr, productKey, model, forecastHour);
+    return url ? probeImage(url) : Promise.resolve('error');
+  }
 
-      let finalImageLoaded = firstForecastHour === finalForecastHour;
-      if (!finalImageLoaded) {
-        const finalImageUrl = buildImageUrl(model.id, runStr, productKey, model, finalForecastHour);
-        finalImageLoaded = Boolean(finalImageUrl && await probeImage(finalImageUrl));
-        if (generation !== runDetectionGeneration || getModelVariant(model.id) !== checkedVariant) return;
+  async function findLastAvailableHour(model, runStr, productKey, hours) {
+    let low = 0;
+    let high = hours.length - 1;
+    while (high - low > 1) {
+      const middle = Math.floor((low + high) / 2);
+      const result = await probeRunHour(model, runStr, productKey, hours[middle]);
+      if (result === 'ok') low = middle;
+      else if (result === 'missing') high = middle;
+      else break;
+    }
+    return hours[low];
+  }
+
+  async function runModelVerification(model, productKey) {
+    const candidates = getRunCandidates(model, 3);
+    for (let index = 0; index < candidates.length; index++) {
+      const runStr = candidates[index];
+      const hours = getVerificationHours(model, productKey, runStr);
+      if (!hours) continue;
+
+      const first = hours[0];
+      const last = hours.at(-1);
+      const [firstResult, lastResult] = first === last
+        ? await probeRunHour(model, runStr, productKey, first).then(result => [result, result])
+        : await Promise.all([
+          probeRunHour(model, runStr, productKey, first),
+          probeRunHour(model, runStr, productKey, last)
+        ]);
+
+      if (firstResult === 'error' || lastResult === 'error') {
+        return { state: 'unavailable', checkedAt: Date.now() };
+      }
+      if (lastResult === 'ok') {
+        return { state: 'current', verifiedRun: runStr, checkedAt: Date.now() };
+      }
+      if (firstResult === 'missing') continue;
+
+      // Ciclo a medio publicar: ¿sigue existiendo el anterior?
+      const previousRun = candidates[index + 1];
+      const previousHours = previousRun ? getVerificationHours(model, productKey, previousRun) : null;
+      if (previousHours) {
+        const previousResult = await probeRunHour(model, previousRun, productKey, previousHours[0]);
+        if (previousResult === 'ok') {
+          return { state: 'processing', verifiedRun: previousRun, preparingRun: runStr, checkedAt: Date.now() };
+        }
+        if (previousResult === 'error') {
+          return { state: 'unavailable', checkedAt: Date.now() };
+        }
       }
 
-      if (finalImageLoaded) {
-        modelRunVerification.set(model.id, { state: preparingRun ? 'preparing' : 'current', preparingRun });
-        refreshRunOptions(model, runStr);
-        updateModelFreshnessInfo(model);
-        renderModelButtons();
-        updateImages();
-        return;
-      }
-
-      preparingRun ||= runStr;
+      return {
+        state: 'partial',
+        verifiedRun: runStr,
+        lastAvailableHour: await findLastAvailableHour(model, runStr, productKey, hours),
+        checkedAt: Date.now()
+      };
     }
 
-    if (generation === runDetectionGeneration && getModelVariant(model.id) === checkedVariant) {
-      modelRunVerification.set(model.id, { state: preparingRun ? 'preparing' : 'unavailable', preparingRun });
+    return { state: 'unavailable', checkedAt: Date.now() };
+  }
+
+  async function verifyModelRun(model, generation, productKey, force = false) {
+    if (generation !== runDetectionGeneration) return;
+    if (!getProductCode(model.id, productKey)) return;
+
+    const checkedVariant = getModelVariant(model.id);
+    const cacheKey = getVerificationCacheKey(model, productKey);
+    const cachedResult = modelRunVerification.get(cacheKey);
+    if (!force && cachedResult?.checkedAt && cachedResult.state !== 'unavailable' && Date.now() - cachedResult.checkedAt < RUN_DETECTION_INTERVAL_MS) {
+      applyModelRunVerification(model, productKey, generation, cachedResult);
+      return;
+    }
+
+    let verificationPromise = modelRunVerificationInFlight.get(cacheKey);
+    if (!verificationPromise) {
+      if (!cachedResult) modelRunVerification.set(cacheKey, { state: 'checking', checkedAt: 0 });
       updateModelFreshnessInfo(model);
+      verificationPromise = runModelVerification(model, productKey);
+      modelRunVerificationInFlight.set(cacheKey, verificationPromise);
+    }
+
+    try {
+      const verification = await verificationPromise;
+      modelRunVerification.set(cacheKey, verification);
+      if (getModelVariant(model.id) !== checkedVariant) return;
+      applyModelRunVerification(model, productKey, generation, verification);
+    } finally {
+      if (modelRunVerificationInFlight.get(cacheKey) === verificationPromise) {
+        modelRunVerificationInFlight.delete(cacheKey);
+      }
     }
   }
 
-  async function detectRegionRuns(region, force = false) {
-    if (!force && Date.now() - lastRunDetectionAt < RUN_DETECTION_INTERVAL_MS) return;
-    lastRunDetectionAt = Date.now();
-    const generation = ++runDetectionGeneration;
-    const models = MODELS_CONFIG[region] || [];
-    const firstModel = models.find(model => model.id === activeModelId) || models[0];
-    if (!firstModel) return;
-    if (modelAvailabilityStatus) modelAvailabilityStatus.textContent = 'Comprobando disponibilidad de modelos...';
+  function applyModelRunVerification(model, productKey, generation, verification) {
+    if (generation !== runDetectionGeneration || productKey !== productSelect.value) return;
 
-    await verifyModelRun(firstModel, generation);
-    const remainingModels = models.filter(model => model.id !== firstModel.id);
-    let nextModelIndex = 0;
-    const workers = Array.from({ length: Math.min(2, remainingModels.length) }, async () => {
-      while (generation === runDetectionGeneration && nextModelIndex < remainingModels.length) {
-        const model = remainingModels[nextModelIndex++];
-        await verifyModelRun(model, generation);
+    const runSelect = document.getElementById(`run-${model.id}`);
+    const previousRun = runSelect?.value;
+    if (verification.verifiedRun) {
+      refreshRunOptions(model, verification.verifiedRun);
+    }
+    updateModelFreshnessInfo(model);
+    renderModelButtons();
+    if (model.id === activeModelId) {
+      updateForecastSliderRange();
+      if (runSelect?.value !== previousRun || verification.state === 'partial') updateImages();
+    }
+  }
+
+  function verifyAllModels(force = false) {
+    const models = MODELS_CONFIG[regionSelect.value] || [];
+    const productKey = productSelect.value;
+    const productName = productSelect.options[productSelect.selectedIndex]?.textContent?.trim() || 'producto';
+    const generation = ++runDetectionGeneration;
+    lastRunDetectionAt = Date.now();
+
+    const queue = [...models].sort((a, b) => (b.id === activeModelId) - (a.id === activeModelId));
+    models.forEach(updateModelFreshnessInfo);
+    if (modelAvailabilityStatus) {
+      modelAvailabilityStatus.textContent = `Comprobando ${productName.toLowerCase()} en todos los modelos...`;
+    }
+
+    const worker = async () => {
+      while (queue.length && generation === runDetectionGeneration) {
+        await verifyModelRun(queue.shift(), generation, productKey, force);
+      }
+    };
+    Promise.all([worker(), worker(), worker()]).then(() => {
+      if (generation === runDetectionGeneration && modelAvailabilityStatus) {
+        modelAvailabilityStatus.textContent = `Disponibilidad comprobada a las ${formatUtcTime(new Date())}`;
       }
     });
-    await Promise.all(workers);
-    if (generation === runDetectionGeneration && modelAvailabilityStatus) {
-      modelAvailabilityStatus.textContent = `Disponibilidad de modelos comprobada por última vez a las ${formatUtcTime(new Date())}`;
+  }
+
+  function getEffectiveMaxHour(model, runStr) {
+    const entry = modelRunVerification.get(getVerificationCacheKey(model, productSelect.value));
+    if (entry?.state === 'partial' && entry.verifiedRun === runStr && entry.lastAvailableHour) {
+      return entry.lastAvailableHour;
     }
+    return getModelMaxHour(model, Number(runStr.slice(8, 10)));
+  }
+
+  function detectRegionRuns(force = false) {
+    verifyAllModels(force);
+  }
+
+  function recheckIfInactive() {
+    if (!document.hidden && Date.now() - lastRunDetectionAt >= INACTIVITY_RECHECK_MS) verifyAllModels(true);
   }
 
   const PRODUCTS_MAP = {
-    aromeIFS: { precip: '1', precip_acc: '25', clouds: '55', t2m: '0', wind10m: '3', gust10m: '11', cape: '28' },
+    aromeIFS: { precip: '1', precip_acc: '25', snow_acc: '45', snow_depth: '58', clouds: '55', t2m: '0', wind10m: '3', gust10m: '11', cape: '28' },
     arome25: { t850: '16', t500: '21', agua_precip: '46', geop500: '2', wind700_850: '35', wind900: '8', velocidad_vertical: '15' },
-    wrf: { precip: '1', precip_acc: '25', agua_precip: '46', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28', velocidad_vertical: '15' },
-    ukmo_hd: { precip: '1', precip_acc: '25', clouds: '4', t2m: '40', t850: '16', t500: '21', wind10m: '3', gust10m: '11', geop500: '2' },
-    arpege: { precip: '1', precip_acc: '25', agua_precip: '46', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28', velocidad_vertical: '15' },
-    gfs: { precip: '574', precip_acc: '777', clouds: '562', t2m: '580', t850: '7', t500: '21', wind10m: '602', gust10m: '289', wind700_850: '314', wind900: '104', geop500: '21', cape: '109', velocidad_vertical: '107' },
-    ecmwf: { precip: '2', precip_acc: '25', agua_precip: '26', clouds: '35', t2m: '19', t850: '1', t500: '13', wind10m: '14', gust10m: '27', wind700_850: '6', wind900: '10', geop500: '0', cape: '11' },
-    icon_eu: { precip: '1', precip_acc: '25', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '34', wind900: '33', geop500: '2', cape: '28' },
+    wrf: { precip: '1', precip_type: '42', precip_acc: '25', snow_acc: '45', snow_depth: '26', agua_precip: '46', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28', velocidad_vertical: '15' },
+    ukmo_hd: { precip: '1', precip_type: '42', precip_acc: '25', snow_acc: '45', snow_depth: '46', clouds: '4', t2m: '40', t850: '16', t500: '21', wind10m: '3', gust10m: '11', geop500: '2' },
+    arpege: { precip: '1', precip_type: '42', precip_acc: '25', snow_acc: '45', agua_precip: '46', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '35', wind900: '8', geop500: '2', cape: '28', velocidad_vertical: '15' },
+    gfs: { precip: '574', precip_acc: '777', snow_depth: '780', clouds: '562', t2m: '580', t850: '7', t500: '21', wind10m: '602', gust10m: '289', wind700_850: '314', wind900: '104', geop500: '21', cape: '109', velocidad_vertical: '107' },
+    ecmwf: { precip: '2', precip_type: '28', precip_acc: '25', snow_acc: '33', snow_depth: '34', agua_precip: '26', clouds: '35', t2m: '19', t850: '1', t500: '13', wind10m: '14', gust10m: '27', wind700_850: '6', wind900: '10', geop500: '0', cape: '11' },
+    icon_eu: { precip: '1', precip_type: '42', precip_acc: '25', snow_acc: '45', snow_depth: '46', clouds: '4', t2m: '0', t850: '16', t500: '21', wind10m: '3', gust10m: '11', wind700_850: '34', wind900: '33', geop500: '2', cape: '28' },
 
-    ecmwf_eu: { anom850: '15', precip: '2', t2m: '9', t850: '1', clouds: '35', precip_acc: '25', agua_precip: '26', t500: '13', wind10m: '14', wind700_850: '6', jetstream: '5', geop500: '0' },
-    gfs_eu: { anom850: '15', precip: '2', t2m: '9', t850: '1', t500: '13', precip_acc: '25', wind10m: '14', jetstream: '5', geop500: '0', cape: '11' },
+    ecmwf_eu: { anom850: '15', precip: '2', t2m: '9', t850: '1', clouds: '35', precip_acc: '25', snow_acc: '33', agua_precip: '26', t500: '13', wind10m: '14', wind700_850: '6', jetstream: '5', geop500: '0' },
+    gfs_eu: { anom850: '15', precip: '2', t2m: '9', t850: '1', t500: '13', precip_acc: '25', snow_depth: '16', wind10m: '14', jetstream: '5', geop500: '0', cape: '11' },
     ukmo_eu: { precip: '2', t850: '1', t500: '13', geop500: '0' },
     arpege_eu: { jetstream: '5', cape: '11', precip_acc: '25', wind10m: '14', geop500: '13', anom850: '15', t850: '1', t2m: '9', precip: '2'},
-    icon_eu_eu: { precip: '1', t2m: '0', t850: '16', clouds: '4', t500: '21', precip_acc: '25', wind10m: '3', gust10m: '11', wind700_850: '34', geop500: '2', cape: '28' },
-    wrf_eu: { precip: '2', t2m: '0', t850: '16', clouds: '4', t500: '21', precip_acc: '25', agua_precip: '46', wind10m: '14', jetstream: '9', geop500: '2', cape: '28', wind700_850: '35', gust10m: '11', wind10m: '3', precip: '1',}
+    icon_eu_eu: { precip: '1', precip_type: '42', t2m: '0', t850: '16', clouds: '4', t500: '21', precip_acc: '25', snow_acc: '45', snow_depth: '46', wind10m: '3', gust10m: '11', wind700_850: '34', geop500: '2', cape: '28' },
+    wrf_eu: { precip: '2', precip_type: '42', t2m: '0', t850: '16', clouds: '4', t500: '21', precip_acc: '25', snow_acc: '45', snow_depth: '26', agua_precip: '46', wind10m: '14', jetstream: '9', geop500: '2', cape: '28', wind700_850: '35', gust10m: '11', wind10m: '3', precip: '1',}
   };
+
+  const AIFS_PRODUCTS_MAP = {
+    ecmwf: { precip: '2', precip_acc: '25', snow_acc: '45', agua_precip: '26', t2m: '19', t850: '1', t500: '13', wind10m: '14', wind700_850: '6', geop500: '0' },
+    ecmwf_eu: { anom850: '15', precip: '2', t2m: '19', t850: '1', t500: '13', precip_acc: '25', snow_acc: '45', agua_precip: '26', wind10m: '14', wind700_850: '6', jetstream: '5', geop500: '0' }
+  };
+
+  const PRODUCT_NOTES = {
+    snow_acc: 'Por norma general, estos mapas no representan el espesor final de la capa de nieve en el suelo, sino la acumulación de nieve precipitada, y no tiene en cuenta la capacidad de la nieve para cuajar o la nieve preexistente. Algunos mapas suelen usar una relación 10:1 (1 mm de precipitación equivale a 1 cm de nieve), aunque dicha relación es variable según si la nieve es más o menos pesada/húmeda.',
+    snow_depth: 'Algunos mapas usan relación 10:1, que significa 1 mm de precipitación equivale a 1 cm de nieve, aunque dicha relación es variable según si la nieve es más o menos pesada/húmeda.'
+  };
+
+  function getProductCode(modelId, productKey) {
+    // La capa de nieve solo existe en la variante clásica (1,3 km) de AROME
+    if (modelId === 'aromeIFS' && productKey === 'snow_depth' && getModelVariant(modelId) !== 'classic') return undefined;
+    if ((modelId === 'ecmwf' || modelId === 'ecmwf_eu') && getModelVariant(modelId) === 'aifs') {
+      return AIFS_PRODUCTS_MAP[modelId][productKey];
+    }
+    return PRODUCTS_MAP[modelId]?.[productKey];
+  }
+
+  function syncProductNote(card, productKey) {
+    let note = card.querySelector('.product-note');
+    const text = PRODUCT_NOTES[productKey];
+    if (!text) {
+      note?.remove();
+      return;
+    }
+    if (!note) {
+      note = document.createElement('small');
+      note.className = 'product-note';
+      card.prepend(note);
+    }
+    note.textContent = text;
+  }
 
   function getRunElapsedHours(runStr, now = new Date()) {
     const runDate = new Date(Date.UTC(
@@ -386,15 +546,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getModelLimitDate(modelLimitHours, runStr) {
-    const now = new Date();
-    const remainingHours = modelLimitHours - getRunElapsedHours(runStr, now);
-    const limitDate = new Date(now.getTime() + remainingHours * 60 * 60 * 1000);
+    const runDate = Date.UTC(
+      Number(runStr.slice(0, 4)),
+      Number(runStr.slice(4, 6)) - 1,
+      Number(runStr.slice(6, 8)),
+      Number(runStr.slice(8, 10))
+    );
+    const limitDate = new Date(runDate + modelLimitHours * 3600000);
 
-    const day = limitDate.getDate();
-    const month = limitDate.getMonth() + 1;
+    const day = String(limitDate.getDate()).padStart(2, '0');
+    const month = String(limitDate.getMonth() + 1).padStart(2, '0');
     const hours = String(limitDate.getHours()).padStart(2, '0');
 
-    return `${day}/${month} ${hours}h`;
+    return `${day}/${month} ${hours}:00`;
   }
 
   function getLatestAvailableRun(model) {
@@ -465,18 +629,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const optWind900 = document.getElementById('opt-wind900');
     const optJetstream = document.getElementById('opt-jetstream');
     const optVerticalVelocity = document.getElementById('opt-vertical-velocity');
+    const optAnom850 = document.getElementById('opt-anom850');
 
     if (region === 'europa') {
       if (optWind900) optWind900.style.display = 'none';
       if (optJetstream) optJetstream.style.display = 'block';
       if (optVerticalVelocity) optVerticalVelocity.style.display = 'none';
+      if (optAnom850) optAnom850.style.display = 'block';
       if (productSelect.value === 'wind900') productSelect.value = 'precip';
       if (productSelect.value === 'velocidad_vertical') productSelect.value = 'precip';
     } else {
       if (optWind900) optWind900.style.display = 'block';
       if (optJetstream) optJetstream.style.display = 'none';
       if (optVerticalVelocity) optVerticalVelocity.style.display = 'block';
+      if (optAnom850) optAnom850.style.display = 'none';
       if (productSelect.value === 'jetstream') productSelect.value = 'precip';
+      if (productSelect.value === 'anom850') productSelect.value = 'precip';
     }
 
     if (!activeModelId || !models.some(m => m.id === activeModelId)) {
@@ -487,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const runs = generateAvailableRuns(model);
 
       const wrapper = document.createElement('div');
-      wrapper.className = model.id === 'aromeIFS' ? 'model-option model-option-arome' : 'model-option';
+      wrapper.className = model.variants ? 'model-option model-option-arome' : 'model-option';
 
       const label = document.createElement('label');
       label.textContent = model.name;
@@ -496,9 +664,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (model.variants) {
         const variantSelect = document.createElement('select');
         variantSelect.id = `variant-${model.id}`;
-        variantSelect.setAttribute('aria-label', 'Variante AROME');
-        variantSelect.appendChild(new Option('1,3 km', 'classic'));
-        variantSelect.appendChild(new Option('IFS 2,5 km', 'ifs'));
+        variantSelect.setAttribute('aria-label', model.variantLabel || 'Variante AROME');
+        const variantOptions = model.variantOptions || { classic: '1,3 km', ifs: 'IFS 2,5 km' };
+        Object.entries(variantOptions).forEach(([value, text]) => variantSelect.appendChild(new Option(text, value)));
         variantSelect.value = model.defaultVariant;
         wrapper.appendChild(label);
         wrapper.appendChild(variantSelect);
@@ -511,10 +679,9 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           updateModelOptionRunColor(model);
           updateModelFreshnessInfo(model);
-          const generation = runDetectionGeneration;
-          verifyModelRun(model, generation);
           renderModelButtons();
           updateImages();
+          detectRegionRuns();
         });
       } else {
         wrapper.appendChild(label);
@@ -561,7 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedProduct = productSelect.value;
 
     const availableModels = models.filter(model => {
-      return PRODUCTS_MAP[model.id] && PRODUCTS_MAP[model.id][selectedProduct] !== undefined;
+      return getProductCode(model.id, selectedProduct) !== undefined;
     });
 
     if (!activeModelId || !availableModels.some(m => m.id === activeModelId)) {
@@ -595,8 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const selectedRunStr = runSelect ? runSelect.value : getLatestAvailableRun(model);
       const runHourUtc = parseInt(selectedRunStr.substring(8, 10), 10);
 
-      const limitText = getModelLimitDate(getModelMaxHour(model, runHourUtc), selectedRunStr);
-      btn.innerHTML = `${getModelDisplayName(model)}<br><small>Hasta ${limitText}</small>`;
+      btn.textContent = getModelDisplayName(model);
 
       btn.addEventListener('click', () => {
         stopModelAnimation();
@@ -621,6 +787,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getForecastStep(modelId, productKey, targetForecastHour, modelConfig) {
     let currentStep = modelConfig.step || 1;
+
+    if ((modelId === 'ecmwf' || modelId === 'ecmwf_eu') && getModelVariant(modelId) === 'aifs') {
+      return 6;
+    }
 
     if (modelId === 'ukmo_hd') {
       if (targetForecastHour > 48) currentStep = 3;
@@ -714,7 +884,7 @@ document.addEventListener('DOMContentLoaded', () => {
       stopModelAnimation();
       return;
     }
-    if (!activeModelId || !PRODUCTS_MAP[activeModelId]?.[productSelect.value]) return;
+    if (!activeModelId || !getProductCode(activeModelId, productSelect.value)) return;
 
     animateModelBtn.textContent = '⏸';
     animateModelBtn.setAttribute('aria-label', 'Pausar animación');
@@ -737,7 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function buildImageUrl(modelId, runStr, productKey, modelConfig, forecastHourOverride = null) {
-    const productCode = PRODUCTS_MAP[modelId]?.[productKey];
+    const productCode = getProductCode(modelId, productKey);
     if (!productCode) return null;
 
     const runYear = parseInt(runStr.substring(0, 4));
@@ -760,6 +930,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (targetForecastHour > maxHour) return null;
 
     let sourceRunStr = runStr;
+    const isAifs = (modelId === 'ecmwf' || modelId === 'ecmwf_eu') && getModelVariant(modelId) === 'aifs';
+    if (isAifs) {
+      const prefix = modelId === 'ecmwf' ? 'ecmwfsp' : 'ecmwf';
+      return `https://modeles3.meteociel.fr/modeles/ecmwfaifsv1/runs/${runStr}/${prefix}-${productCode}-${targetForecastHour}.png`;
+    }
+
     if ((modelId === 'ecmwf' || modelId === 'ecmwf_eu') && targetForecastHour > 144 && (runHour === 6 || runHour === 18)) {
       const sourceRunDate = new Date(runDate);
       sourceRunDate.setUTCHours(sourceRunDate.getUTCHours() - 6);
@@ -838,6 +1014,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function loadImageWithRunFallback(img, fallbackMessage, model, productKey, selectedRun) {
+    const requestId = Number(img.dataset.requestId || 0) + 1;
+    img.dataset.requestId = String(requestId);
+
+    const runDate = new Date(Date.UTC(
+      Number(selectedRun.slice(0, 4)),
+      Number(selectedRun.slice(4, 6)) - 1,
+      Number(selectedRun.slice(6, 8)),
+      Number(selectedRun.slice(8, 10))
+    ));
+    const candidateRuns = [selectedRun];
+    for (let index = 0; index < 1; index++) {
+      runDate.setTime(getPreviousModelRunDate(model, runDate).getTime());
+      candidateRuns.push(formatRunString(runDate));
+    }
+
+    let candidateIndex = 0;
+    const tryNextRun = () => {
+      if (Number(img.dataset.requestId) !== requestId) return;
+      while (candidateIndex < candidateRuns.length) {
+        const candidateRun = candidateRuns[candidateIndex++];
+        const imageUrl = buildImageUrl(model.id, candidateRun, productKey, model);
+        if (!imageUrl) continue;
+
+        img.hidden = false;
+        img.alt = `${model.name} - ${productKey} - ciclo ${candidateRun.slice(8, 10)}Z`;
+        img.onload = () => {
+          if (Number(img.dataset.requestId) !== requestId) return;
+          imagesDisplayContainer.style.minHeight = '';
+          fallbackMessage.textContent = candidateRun === selectedRun
+            ? ''
+            : `Imagen del ciclo ${selectedRun.slice(8, 10)}Z no disponible; mostrando ${candidateRun.slice(8, 10)}Z.`;
+        };
+        img.onerror = () => {
+          if (Number(img.dataset.requestId) !== requestId) return;
+          tryNextRun();
+        };
+        img.src = imageUrl;
+        return;
+      }
+
+      img.onload = null;
+      img.onerror = null;
+      img.hidden = true;
+      fallbackMessage.textContent = `No hay imagen disponible para este plazo en los últimos ${candidateRuns.length} ciclos.`;
+      imagesDisplayContainer.style.minHeight = '';
+    };
+
+    fallbackMessage.textContent = '';
+    tryNextRun();
+  }
+
   function updateImages() {
     const region = regionSelect.value;
     const models = MODELS_CONFIG[region] || [];
@@ -879,8 +1107,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const existingImg = imagesDisplayContainer.querySelector('img');
 
     if (existingImg) {
-      existingImg.src = imgUrl;
-      existingImg.alt = `${model.name} - ${selectedProduct}`;
+      const fallbackMessage = imagesDisplayContainer.querySelector('.image-run-fallback');
+      syncProductNote(existingImg.closest('.model-card-img'), selectedProduct);
+      loadImageWithRunFallback(existingImg, fallbackMessage, model, selectedProduct, selectedRun);
     } else {
       const currentHeight = imagesDisplayContainer.offsetHeight;
       if (currentHeight > 0) {
@@ -893,29 +1122,26 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'model-card-img';
 
       const img = document.createElement('img');
-      img.src = imgUrl;
-      img.alt = `${model.name} - ${selectedProduct}`;
-      
-      img.onload = () => {
-        imagesDisplayContainer.style.minHeight = '';
-      };
+      const fallbackMessage = document.createElement('p');
+      fallbackMessage.className = 'image-run-fallback';
 
       card.appendChild(img);
+      card.appendChild(fallbackMessage);
+      syncProductNote(card, selectedProduct);
       imagesDisplayContainer.appendChild(card);
+      loadImageWithRunFallback(img, fallbackMessage, model, selectedProduct, selectedRun);
     }
   }
 
   regionSelect.addEventListener('change', () => {
     stopModelAnimation();
     renderModelCheckboxes();
-    detectRegionRuns(regionSelect.value, true);
+    detectRegionRuns(true);
   });
-  window.addEventListener('focus', () => detectRegionRuns(regionSelect.value));
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) detectRegionRuns(regionSelect.value);
-  });
+  window.addEventListener('focus', recheckIfInactive);
+  document.addEventListener('visibilitychange', recheckIfInactive);
   setInterval(() => {
-    if (!document.hidden) detectRegionRuns(regionSelect.value);
+    if (!document.hidden) verifyAllModels(true);
   }, RUN_DETECTION_INTERVAL_MS);
   setInterval(() => {
     (MODELS_CONFIG[regionSelect.value] || []).forEach(updateModelFreshnessInfo);
@@ -924,6 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     stopModelAnimation();
     renderModelButtons();
     updateImages();
+    detectRegionRuns();
   });
 
   function buildSliderTicks() {
@@ -1026,7 +1253,7 @@ document.addEventListener('DOMContentLoaded', () => {
   buildSliderTicks();
 
   renderModelCheckboxes();
-  detectRegionRuns(regionSelect.value);
+  detectRegionRuns();
 
   let lastMeteogramData = null;
   let meteogramChartInstance = null;
@@ -1458,7 +1685,7 @@ function renderMeteogram(data) {
       const runHourUtc = parseInt(selectedRunStr.substring(8, 10), 10);
 
       const now = new Date();
-      const remainingHours = getModelMaxHour(model, runHourUtc) - getRunElapsedHours(selectedRunStr, now);
+      const remainingHours = getEffectiveMaxHour(model, selectedRunStr) - getRunElapsedHours(selectedRunStr, now);
       const limitDate = new Date(now.getTime() + remainingHours * 60 * 60 * 1000);
 
       const warningThresholdMs = 3 * 60 * 60 * 1000;

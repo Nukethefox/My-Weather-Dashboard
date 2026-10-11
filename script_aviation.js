@@ -90,8 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
       'DS': 'tormenta de polvo'
     };
 
+    const standaloneWxMap = {
+      'NSW': 'sin fenómenos significativos'
+    };
+
     const tokens = rawWx.trim().split(/\s+/);
     const decodedTokens = tokens.map(token => {
+      const standalone = standaloneWxMap[token.toUpperCase()];
+      if (standalone) {
+        return `${token} (${standalone.charAt(0).toUpperCase() + standalone.slice(1)})`;
+      }
+
       let str = token;
       let intensity = '';
 
@@ -173,13 +182,23 @@ document.addEventListener('DOMContentLoaded', () => {
       while (currentTs <= endHourTimestamp) {
         const hourEndTs = currentTs + 3600;
 
+        // Los BECMG son cambios permanentes: se acumulan sobre la base desde su timeFrom.
+        // El resto (TEMPO/PROB) son ventanas [timeFrom, timeTo) con prioridad sobre la base.
         let activeBase = { ...baseFcst };
         const activeChanges = [];
 
         for (let i = 1; i < report.fcsts.length; i++) {
           const fc = report.fcsts[i];
 
-          if (fc.timeFrom <= currentTs && fc.timeTo >= currentTs) {
+          if (fc.fcstChange === 'BECMG') {
+            if (fc.timeFrom <= currentTs) {
+              ['wdir', 'wspd', 'wgst', 'visib', 'wxString'].forEach(field => {
+                if (fc[field] !== null && fc[field] !== undefined) activeBase[field] = fc[field];
+              });
+              if (fc.wdir !== null && fc.wdir !== undefined) activeBase.wgst = fc.wgst;
+              if (fc.clouds && fc.clouds.length > 0) activeBase.clouds = fc.clouds;
+            }
+          } else if (fc.timeFrom <= currentTs && fc.timeTo > currentTs) {
             activeChanges.push(fc);
           }
         }

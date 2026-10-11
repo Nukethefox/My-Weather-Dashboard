@@ -141,7 +141,13 @@ select:focus {
   color: #86efac;
 }
 
-.model-freshness-preparing {
+.model-freshness-unchecked {
+  color: #94a3b8;
+}
+
+.model-freshness-preparing,
+.model-freshness-processing,
+.model-freshness-partial {
   color: #fbbf24;
 }
 
@@ -203,6 +209,8 @@ select:focus {
 .model-card-img {
   width: 100%;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   background: #181818;
   border: 1px solid #333;
@@ -217,6 +225,22 @@ select:focus {
   max-height: calc(100vh - 100px);
   object-fit: contain;
   border-radius: 4px;
+}
+
+.image-run-fallback {
+  margin: 8px 0 0;
+  color: #fbbf24;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.product-note {
+  display: block;
+  max-width: 720px;
+  margin: 0 0 8px;
+  color: #94a3b8;
+  text-align: center;
+  line-height: 1.35;
 }
 
 .not-available-msg {

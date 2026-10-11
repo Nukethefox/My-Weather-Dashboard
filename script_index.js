@@ -139,8 +139,17 @@ async function fetchMetarData() {
       'DS': 'tormenta de polvo'
     };
 
+    const standaloneWxMap = {
+      'NSW': 'sin fenómenos significativos'
+    };
+
     const tokens = rawWx.trim().split(/\s+/);
     const decodedTokens = tokens.map(token => {
+      const standalone = standaloneWxMap[token.toUpperCase()];
+      if (standalone) {
+        return `${token} (${standalone.charAt(0).toUpperCase() + standalone.slice(1)})`;
+      }
+
       let str = token;
       let intensity = '';
 
@@ -222,7 +231,7 @@ async function fetchMetarData() {
         const groupTokens = tokens.slice(index + 1, groupEnd);
         const timeRangeToken = groupTokens.find(token => /^\d{4}\/\d{4}$/.test(token));
         const visibilityToken = groupTokens.find(token => /^\d{4}$/.test(token));
-        const weatherTokenPattern = /^(?:[-+])?(?:VC|RE)?(?:(?:FZ|TS|SH|BL|DR|PR|BC|MI)*(?:DZ|RA|SN|SG|PL|GR|GS|BR|FG|FU|VA|DU|SA|HZ|PO|SQ|FC|SS|DS)+|TS)$/;
+        const weatherTokenPattern = /^(?:[-+])?(?:VC|RE)?(?:(?:FZ|TS|SH|BL|DR|PR|BC|MI)*(?:DZ|RA|SN|SG|PL|GR|GS|BR|FG|FU|VA|DU|SA|HZ|PO|SQ|FC|SS|DS)+|TS|NSW)$/;
         const cloudItems = [];
         const weatherTokens = [];
         let windHtml = '';
