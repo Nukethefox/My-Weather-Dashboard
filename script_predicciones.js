@@ -23,8 +23,179 @@ document.addEventListener('DOMContentLoaded', () => {
   const hourPickerSlider = document.getElementById('hour-picker-slider');
   const sliderTicksLabels = document.getElementById('slider-ticks-labels');
 
+  const modeSelect = document.getElementById('mode-select');
+
   let offsetFromNow = 1;
   let animationTimer = null;
+
+  const MODE_DEFINITIONS = {
+    europa: [
+      { id: 'single', label: 'Modelo único' },
+      { id: 'two', label: 'Dos modelos', count: 2 },
+      { id: 'four', label: 'Cuatro modelos', count: 4 }
+    ],
+    peninsula: [
+      { id: 'single', label: 'Modelo único' },
+      { id: 'meso', label: 'Modelos mesoescala', count: 2 },
+      { id: 'two-global', label: 'Dos modelos globales', count: 2 },
+      { id: 'four-global', label: 'Cuatro modelos globales', count: 4 }
+    ]
+  };
+
+  // El token "modelo@aifs" selecciona la variante AIFS de ECMWF
+  const COMPARE_SLOT_OPTIONS = {
+    europa: [
+      ['ecmwf_eu', 'ECMWF'], ['ecmwf_eu@aifs', 'ECMWF-AIFS'], ['gfs_eu', 'GFS'], ['ukmo_eu', 'UKMO'],
+      ['arpege_eu', 'ARPEGE'], ['wrf_eu', 'WRF'], ['icon_eu_eu', 'ICON-EU']
+    ],
+    peninsula: [
+      ['ecmwf', 'ECMWF'], ['ecmwf@aifs', 'ECMWF-AIFS'], ['gfs', 'GFS'], ['ukmo_hd', 'UKMO'],
+      ['arpege', 'ARPEGE'], ['icon_eu', 'ICON-EU']
+    ]
+  };
+
+  const COMPARE_DEFAULTS = {
+    'europa:two': ['ecmwf_eu', 'gfs_eu'],
+    'europa:four': ['ecmwf_eu', 'gfs_eu', 'arpege_eu', 'ukmo_eu'],
+    'peninsula:meso': ['classic'],
+    'peninsula:two-global': ['ecmwf', 'gfs'],
+    'peninsula:four-global': ['ecmwf', 'gfs', 'ukmo_hd', 'arpege']
+  };
+
+  const COMPARE_SLOT_LABELS = {
+    2: ['Izquierda', 'Derecha'],
+    4: ['Arriba izquierda', 'Arriba derecha', 'Abajo izquierda', 'Abajo derecha']
+  };
+
+  let compareMode = 'single';
+  let compareSlots = [];
+  const savedCompareSlots = {};
+
+  function getCompareModeDefinition() {
+    return (MODE_DEFINITIONS[regionSelect.value] || []).find(mode => mode.id === compareMode);
+  }
+
+  // En modo mesoescala el hueco derecho usa AROME 1.3/IFS y, si el producto no existe en ninguno, AROME 2.5
+  function resolveCompareModels(productKey) {
+    const models = MODELS_CONFIG[regionSelect.value] || [];
+    if (compareMode === 'meso') {
+      const aromeId = getProductCode('aromeIFS', productKey) !== undefined ? 'aromeIFS' : 'arome25';
+      return ['wrf', aromeId].map(id => models.find(model => model.id === id)).filter(Boolean);
+    }
+    return compareSlots.map(token => models.find(model => model.id === token.split('@')[0])).filter(Boolean);
+  }
+
+  function getDisplayedModels() {
+    const models = MODELS_CONFIG[regionSelect.value] || [];
+    if (compareMode === 'single') {
+      const model = models.find(item => item.id === activeModelId);
+      return model ? [model] : [];
+    }
+    return resolveCompareModels(productSelect.value);
+  }
+
+  function getSelectedRun(model) {
+    const runSelect = document.getElementById(`run-${model.id}`);
+    return runSelect ? runSelect.value : getLatestAvailableRun(model);
+  }
+
+  function setModelVariant(modelId, variant) {
+    const select = document.getElementById(`variant-${modelId}`);
+    if (select && select.value !== variant) {
+      select.value = variant;
+      select.dispatchEvent(new Event('change'));
+    }
+  }
+
+  function syncCompareVariants() {
+    if (compareMode === 'single') return;
+    if (compareMode === 'meso') {
+      setModelVariant('aromeIFS', compareSlots[0]);
+      return;
+    }
+    ['ecmwf', 'ecmwf_eu'].forEach(baseId => {
+      if (compareSlots.includes(`${baseId}@aifs`)) setModelVariant(baseId, 'aifs');
+      else if (compareSlots.includes(baseId)) setModelVariant(baseId, 'classic');
+    });
+  }
+
+  function loadCompareSlots() {
+    const key = `${regionSelect.value}:${compareMode}`;
+    compareSlots = compareMode === 'single' ? [] : [...(savedCompareSlots[key] || COMPARE_DEFAULTS[key] || [])];
+  }
+
+  function populateModeOptions() {
+    const modes = MODE_DEFINITIONS[regionSelect.value] || [];
+    if (!modes.some(mode => mode.id === compareMode)) compareMode = 'single';
+    modeSelect.replaceChildren(...modes.map(mode => new Option(mode.label, mode.id)));
+    modeSelect.value = compareMode;
+    loadCompareSlots();
+  }
+
+  function refreshCompareSlotOptions(wrap) {
+    const selects = [...wrap.querySelectorAll('select')];
+    selects.forEach((select, index) => {
+      const usedElsewhere = new Set(
+        selects.filter((_, other) => other !== index).map(other => other.value.split('@')[0])
+      );
+      [...select.options].forEach(option => {
+        option.disabled = usedElsewhere.has(option.value.split('@')[0]);
+      });
+    });
+  }
+
+  function renderCompareSlots() {
+    const key = `${regionSelect.value}:${compareMode}`;
+    let wrap = modelSelectorButtons.querySelector('.compare-slots');
+    if (wrap && wrap.dataset.key === key) return;
+
+    modelSelectorButtons.innerHTML = '';
+    wrap = document.createElement('div');
+    wrap.className = 'compare-slots';
+    wrap.dataset.key = key;
+
+    const modeDefinition = getCompareModeDefinition();
+    const labels = COMPARE_SLOT_LABELS[modeDefinition.count];
+    const saveSlots = () => { savedCompareSlots[key] = [...compareSlots]; };
+
+    labels.forEach((labelText, index) => {
+      const slot = document.createElement('label');
+      slot.className = 'compare-slot';
+      const caption = document.createElement('span');
+      caption.textContent = labelText;
+      slot.appendChild(caption);
+
+      if (compareMode === 'meso' && index === 0) {
+        const fixed = document.createElement('strong');
+        fixed.textContent = 'WRF 2km';
+        slot.appendChild(fixed);
+        wrap.appendChild(slot);
+        return;
+      }
+
+      const select = document.createElement('select');
+      select.setAttribute('aria-label', labelText);
+      const options = compareMode === 'meso'
+        ? [['classic', 'AROME clásico 1.3km'], ['ifs', 'AROME-IFS 2.5km']]
+        : COMPARE_SLOT_OPTIONS[regionSelect.value];
+      options.forEach(([value, text]) => select.appendChild(new Option(text, value)));
+      const slotIndex = compareMode === 'meso' ? 0 : index;
+      select.value = compareSlots[slotIndex];
+      select.addEventListener('change', () => {
+        stopModelAnimation();
+        compareSlots[slotIndex] = select.value;
+        saveSlots();
+        refreshCompareSlotOptions(wrap);
+        syncCompareVariants();
+        updateImages();
+      });
+      slot.appendChild(select);
+      wrap.appendChild(slot);
+    });
+
+    refreshCompareSlotOptions(wrap);
+    modelSelectorButtons.appendChild(wrap);
+  }
 
   const MODELS_CONFIG = {
     peninsula: [
@@ -185,22 +356,27 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateForecastSliderRange() {
     if (!hourPickerSlider) return;
 
-    const models = MODELS_CONFIG[regionSelect.value] || [];
-    const model = models.find(item => item.id === activeModelId);
-    if (!model) {
+    const displayed = getDisplayedModels().filter(model =>
+      compareMode === 'single' || getProductCode(model.id, productSelect.value) !== undefined
+    );
+
+    // Con varios modelos manda el que menos horas de pronóstico tiene
+    let limiting = null;
+    displayed.forEach(model => {
+      const runStr = getSelectedRun(model);
+      if (!runStr) return;
+      const remainingForecastHours = getEffectiveMaxHour(model, runStr) - Math.floor(getRunElapsedHours(runStr));
+      const maxSliderValue = Math.max(0, Math.min(239, remainingForecastHours - 1));
+      if (!limiting || maxSliderValue < limiting.maxSliderValue) limiting = { maxSliderValue, runStr };
+    });
+
+    if (!limiting) {
       hourPickerSlider.style.setProperty('--forecast-limit-percent', '100%');
       hourPickerSlider.style.setProperty('--forecast-limit-color', '#38bdf8');
       return;
     }
 
-    const runSelect = document.getElementById(`run-${model.id}`);
-    const runStr = runSelect ? runSelect.value : getLatestAvailableRun(model);
-    if (!runStr) return;
-
-    const runHour = Number(runStr.slice(8, 10));
-    const elapsedHours = Math.floor(getRunElapsedHours(runStr));
-    const remainingForecastHours = getEffectiveMaxHour(model, runStr) - elapsedHours;
-    const maxSliderValue = Math.max(0, Math.min(239, remainingForecastHours - 1));
+    const { maxSliderValue, runStr } = limiting;
     const limitPercent = (maxSliderValue / 239) * 100;
     const colors = RUN_HOUR_COLORS[runStr.slice(8, 10)];
 
@@ -436,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateModelFreshnessInfo(model);
     renderModelButtons();
-    if (model.id === activeModelId) {
+    if (getDisplayedModels().some(item => item.id === model.id)) {
       updateForecastSliderRange();
       if (runSelect?.value !== previousRun || verification.state === 'partial') updateImages();
     }
@@ -449,7 +625,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const generation = ++runDetectionGeneration;
     lastRunDetectionAt = Date.now();
 
-    const queue = [...models].sort((a, b) => (b.id === activeModelId) - (a.id === activeModelId));
+    const displayedIds = new Set(getDisplayedModels().map(item => item.id));
+    const queue = [...models].sort((a, b) => displayedIds.has(b.id) - displayedIds.has(a.id));
     models.forEach(updateModelFreshnessInfo);
     if (modelAvailabilityStatus) {
       modelAvailabilityStatus.textContent = `Comprobando ${productName.toLowerCase()} en todos los modelos...`;
@@ -717,11 +894,17 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    populateModeOptions();
+    syncCompareVariants();
     renderModelButtons();
     updateImages();
   }
 
   function renderModelButtons() {
+    if (compareMode !== 'single') {
+      renderCompareSlots();
+      return;
+    }
     modelSelectorButtons.innerHTML = '';
     const region = regionSelect.value;
     const models = MODELS_CONFIG[region] || [];
@@ -846,7 +1029,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function advanceCompareAnimationFrame() {
+    const productKey = productSelect.value;
+    const displayed = getDisplayedModels().filter(model => getProductCode(model.id, productKey) !== undefined);
+    if (displayed.length === 0) {
+      stopModelAnimation();
+      return;
+    }
+
+    // Se anima sobre la unión de plazos de todos los modelos, hasta donde llega el que menos alcance tiene
+    const offsets = new Set();
+    let limit = Infinity;
+    displayed.forEach(model => {
+      const runStr = getSelectedRun(model);
+      const runHourUtc = parseInt(runStr.substring(8, 10), 10);
+      const elapsedHours = Math.floor(getRunElapsedHours(runStr));
+      const maxHour = getEffectiveMaxHour(model, runStr);
+      limit = Math.min(limit, maxHour - elapsedHours);
+      getValidForecastHours(model, productKey, runHourUtc, maxHour).forEach(hour => offsets.add(hour - elapsedHours));
+    });
+
+    const sortedOffsets = [...offsets].filter(offset => offset >= 1 && offset <= limit).sort((a, b) => a - b);
+    if (sortedOffsets.length === 0) {
+      stopModelAnimation();
+      return;
+    }
+    offsetFromNow = sortedOffsets.find(offset => offset > offsetFromNow) ?? sortedOffsets[0];
+    updateImages();
+  }
+
   function advanceAnimationFrame() {
+    if (compareMode !== 'single') {
+      advanceCompareAnimationFrame();
+      return;
+    }
     const models = MODELS_CONFIG[regionSelect.value] || [];
     const model = models.find(item => item.id === activeModelId);
     if (!model) {
@@ -884,7 +1100,10 @@ document.addEventListener('DOMContentLoaded', () => {
       stopModelAnimation();
       return;
     }
-    if (!activeModelId || !getProductCode(activeModelId, productSelect.value)) return;
+    const canAnimate = compareMode === 'single'
+      ? activeModelId && getProductCode(activeModelId, productSelect.value)
+      : getDisplayedModels().some(model => getProductCode(model.id, productSelect.value) !== undefined);
+    if (!canAnimate) return;
 
     animateModelBtn.textContent = '⏸';
     animateModelBtn.setAttribute('aria-label', 'Pausar animación');
@@ -1066,6 +1285,51 @@ document.addEventListener('DOMContentLoaded', () => {
     tryNextRun();
   }
 
+  function updateCompareImages(selectedProduct) {
+    const models = resolveCompareModels(selectedProduct);
+    const cardKeys = models.map(model => `${model.id}|${getProductCode(model.id, selectedProduct) !== undefined}`);
+    let cards = [...imagesDisplayContainer.querySelectorAll('.model-card-img')];
+    const sameStructure = cards.length === cardKeys.length && cards.every((card, i) => card.dataset.cardKey === cardKeys[i]);
+
+    if (!sameStructure) {
+      const currentHeight = imagesDisplayContainer.offsetHeight;
+      if (currentHeight > 0) imagesDisplayContainer.style.minHeight = `${currentHeight}px`;
+      imagesDisplayContainer.innerHTML = '';
+
+      models.forEach((model, i) => {
+        const card = document.createElement('div');
+        card.className = 'model-card-img';
+        card.dataset.cardKey = cardKeys[i];
+
+        const title = document.createElement('strong');
+        title.className = 'model-card-title';
+        card.appendChild(title);
+
+        const fallbackMessage = document.createElement('p');
+        fallbackMessage.className = 'image-run-fallback';
+        if (getProductCode(model.id, selectedProduct) !== undefined) {
+          card.appendChild(document.createElement('img'));
+        } else {
+          fallbackMessage.textContent = 'No disponible: este producto no existe en este modelo.';
+        }
+        card.appendChild(fallbackMessage);
+        imagesDisplayContainer.appendChild(card);
+      });
+      cards = [...imagesDisplayContainer.querySelectorAll('.model-card-img')];
+      if (!cards.some(card => card.querySelector('img'))) imagesDisplayContainer.style.minHeight = '';
+    }
+
+    models.forEach((model, i) => {
+      const card = cards[i];
+      card.querySelector('.model-card-title').textContent = getModelDisplayName(model);
+      const img = card.querySelector('img');
+      if (img) {
+        loadImageWithRunFallback(img, card.querySelector('.image-run-fallback'), model, selectedProduct, getSelectedRun(model));
+      }
+    });
+    syncProductNote(imagesDisplayContainer, selectedProduct);
+  }
+
   function updateImages() {
     const region = regionSelect.value;
     const models = MODELS_CONFIG[region] || [];
@@ -1082,6 +1346,17 @@ document.addEventListener('DOMContentLoaded', () => {
     syncControlInputs();
     updateForecastSliderRange();
     updateModelButtonsState();
+
+    const layout = compareMode === 'single' ? 'single' : 'compare';
+    if (imagesDisplayContainer.dataset.layout !== layout) {
+      imagesDisplayContainer.innerHTML = '';
+      imagesDisplayContainer.dataset.layout = layout;
+      imagesDisplayContainer.classList.toggle('images-container--compare', layout === 'compare');
+    }
+    if (layout === 'compare') {
+      updateCompareImages(selectedProduct);
+      return;
+    }
 
     if (!activeModelId) {
       imagesDisplayContainer.innerHTML = '';
@@ -1137,6 +1412,19 @@ document.addEventListener('DOMContentLoaded', () => {
     stopModelAnimation();
     renderModelCheckboxes();
     detectRegionRuns(true);
+  });
+  modeSelect.addEventListener('change', () => {
+    stopModelAnimation();
+    const previousMode = compareMode;
+    compareMode = modeSelect.value;
+    if (previousMode === 'single' && compareMode !== 'single') {
+      productSelect.value = regionSelect.value === 'europa' ? 'geop500' : 'precip_acc';
+    }
+    loadCompareSlots();
+    syncCompareVariants();
+    renderModelButtons();
+    updateImages();
+    detectRegionRuns();
   });
   window.addEventListener('focus', recheckIfInactive);
   document.addEventListener('visibilitychange', recheckIfInactive);
