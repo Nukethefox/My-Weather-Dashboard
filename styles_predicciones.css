@@ -295,8 +295,9 @@ select:focus {
   margin-top: 8px;
   color: #38bdf8;
   font-size: 0.9rem;
+  font-weight: bold;
   text-align: center;
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .external-links {

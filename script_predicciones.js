@@ -746,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!link) {
       link = document.createElement('a');
       link.className = 'meteociel-model-link';
-      link.textContent = 'See the map on MeteoCiel.';
+      link.textContent = 'Abre el mapa en MeteoCiel';
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       card.appendChild(link);
