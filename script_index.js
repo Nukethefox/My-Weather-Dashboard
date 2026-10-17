@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const satMode = document.getElementById('sat-mode');
   const satType = document.getElementById('sat-type');
   const satImage = document.getElementById('sat-image');
+  const satLink = document.getElementById('sat-link');
   let lastMetarTimestamp = null;
 
   const linksMap = {
@@ -210,7 +211,10 @@ async function fetchMetarData() {
       'FEW': 'Pocas nubes',
       'SCT': 'Nubes dispersas',
       'BKN': 'Nubes casi enteras',
-      'OVC': 'Cubierto'
+      'OVC': 'Cubierto',
+      'OVX': 'Cielo oscurecido',
+      'NSC': 'Sin nubes significativas',
+      'SKC': 'Cielo despejado'
     };
 
     function renderChangeGroups(rawOb) {
@@ -319,7 +323,7 @@ async function fetchMetarData() {
         const prefix = rawVisib.includes('+') ? '>' : '';
         const visibMiles = parseFloat(rawVisib.replace('+', ''));
         if (!isNaN(visibMiles)) {
-          visibKm = `${prefix}${Math.round(visibMiles * 1.60934)}`;
+          visibKm = `${prefix}${(visibMiles * 1.60934).toFixed(2)}`;
         }
       }
       const windKmh = report.wspd !== undefined ? Math.round(report.wspd * 1.852) : '--';
@@ -373,8 +377,14 @@ async function fetchMetarData() {
             </div>
           `;
         }).join('');
+      } else if (report.vertVis !== undefined && report.vertVis !== null) {
+        cloudsHtml = '';
       } else {
         cloudsHtml = '<div class="cloud-item"><span>☀️ Cielo despejado/sin nubes significativas (SKC/NSC)</span></div>';
+      }
+      if (report.vertVis !== undefined && report.vertVis !== null && Number.isFinite(Number(report.vertVis))) {
+        const verticalVisibilityFeet = Number(report.vertVis) * 100;
+        cloudsHtml += `<div class="cloud-item"><span>Visibilidad vertical</span><span>${verticalVisibilityFeet} ft (${Math.round(verticalVisibilityFeet * 0.3048)} m)</span></div>`;
       }
 
       let weatherHtml = '';
@@ -389,6 +399,24 @@ async function fetchMetarData() {
           </div>
         `;
       }
+      const rvrMatches = [...rawOb.matchAll(/\bR(\d{2})([LCR]?)\/([MP]?)(\d{4})([DUN]?)\b/g)];
+      const runwayLabels = { L: 'izquierda', C: 'central', R: 'derecha' };
+      const rvrTendencies = {
+        D: 'tendencia a empeorar',
+        U: 'tendencia a mejorar',
+        N: 'sin cambios'
+      };
+      const rvrHtml = rvrMatches.length > 0 ? `
+        <div class="cloud-layers">
+          <div class="stat-label">Alcance visual en pista (RVR)</div>
+          ${rvrMatches.map(([, runway, side, limit, distance, tendency]) => {
+            const runwayName = `Pista ${runway}${side ? ` ${runwayLabels[side]}` : ''}`;
+            const limitText = limit === 'M' ? 'menos de ' : limit === 'P' ? 'más de ' : '';
+            const tendencyText = rvrTendencies[tendency] ? ` (${rvrTendencies[tendency]})` : '';
+            return `<div class="cloud-item"><span>${runwayName}</span><span>${limitText}${Number(distance)} m${tendencyText}</span></div>`;
+          }).join('')}
+        </div>
+      ` : '';
       const changeGroupsHtml = renderChangeGroups(rawOb);
 
       const card = document.createElement('div');
@@ -440,6 +468,7 @@ async function fetchMetarData() {
           </div>
 
           ${weatherHtml}
+          ${rvrHtml}
           ${changeGroupsHtml}
 
           <div class="raw-ob">${rawOb}</div>
@@ -478,6 +507,7 @@ async function fetchMetarData() {
 
     const url = `https://modeles20.meteociel.fr/satellite/${mode}sat${type}mtg${region}.${ext}`;
     satImage.src = url;
+    satLink.href = 'https://www.meteociel.fr/observations-meteo/satellite.php';
   }
 
   satRegion.addEventListener('change', updateSatImage);
