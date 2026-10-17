@@ -162,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'SCT': 'Nubes dispersas (SCT)',
       'BKN': 'Nubes casi enteras (BKN)',
       'OVC': 'Cubierto (OVC)',
+      'OVX': 'Cielo oscurecido',
       'NSC': 'Sin nubes significativas (NSC)',
       'SKC': 'Cielo despejado (SKC)'
     };
@@ -197,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
               });
               if (fc.wdir !== null && fc.wdir !== undefined) activeBase.wgst = fc.wgst;
               if (fc.clouds && fc.clouds.length > 0) activeBase.clouds = fc.clouds;
+              if (fc.vertVis !== null && fc.vertVis !== undefined) activeBase.vertVis = fc.vertVis;
             }
           } else if (fc.timeFrom <= currentTs && fc.timeTo > currentTs) {
             activeChanges.push(fc);
@@ -246,9 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return !isNaN(vMiles) ? `${(vMiles * 1.60934).toFixed(1)} km` : `${v}`;
       }
 
-      function formatCloudsArr(clouds) {
-        if (!clouds || clouds.length === 0) return 'NSC / CAVOK';
-        return clouds.map(c => {
+      function formatCloudsArr(clouds, vertVis) {
+        const hasVerticalVisibility = vertVis !== null && vertVis !== undefined && Number.isFinite(Number(vertVis));
+        const cloudLayers = clouds && clouds.length > 0 ? clouds.map(c => {
           const trans = coverTranslations[c.cover] || c.cover;
           const baseStr = c.base ? ` ${c.base}ft` : '';
           let typeStr = '';
@@ -258,7 +260,12 @@ document.addEventListener('DOMContentLoaded', () => {
             typeStr = ' <strong class="cloud-type-badge tcu"> Torrecúmulos</strong>';
           }
           return `${trans}${baseStr}${typeStr}`;
-        }).join('<br>');
+        }) : hasVerticalVisibility ? [] : ['NSC / CAVOK'];
+        if (hasVerticalVisibility) {
+          const feet = Number(vertVis);
+          cloudLayers.push(`Visibilidad vertical ${feet} ft (${Math.round(feet * 0.3048)} m)`);
+        }
+        return cloudLayers.join('<br>');
       }
 
       let headerRow = '<th class="cell-label">Hora UTC</th>';
@@ -304,13 +311,13 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
 
-        let effCloudsStr = formatCloudsArr(item.base.clouds);
+        let effCloudsStr = formatCloudsArr(item.base.clouds, item.base.vertVis);
         let cloudsClass = '';
 
         item.changes.forEach(ch => {
-          if (ch.clouds && ch.clouds.length > 0) {
-            const chCloudStr = formatCloudsArr(ch.clouds);
-            if (chCloudStr !== formatCloudsArr(item.base.clouds)) {
+          if ((ch.clouds && ch.clouds.length > 0) || (ch.vertVis !== null && ch.vertVis !== undefined)) {
+            const chCloudStr = formatCloudsArr(ch.clouds, ch.vertVis);
+            if (chCloudStr !== formatCloudsArr(item.base.clouds, item.base.vertVis)) {
               effCloudsStr = chCloudStr;
               const idx = report.fcsts.indexOf(ch) - 1;
               cloudsClass = `change-color-${idx >= 0 ? idx % 6 : 0}`;

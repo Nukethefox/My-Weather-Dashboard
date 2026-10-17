@@ -266,6 +266,31 @@ body {
   font-size: 0.85rem;
 }
 
+.external-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  padding: 0 20px 20px;
+}
+
+.external-link-button {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: #ffe23d;
+  color: #000;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+}
+
+.external-link-button:hover {
+  background-color: #ffd000;
+}
+
 .main-footer a {
   color: #3b82f6;
   text-decoration: none;
