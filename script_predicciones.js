@@ -697,6 +697,63 @@ document.addEventListener('DOMContentLoaded', () => {
     return PRODUCTS_MAP[modelId]?.[productKey];
   }
 
+  function getMeteocielModelUrl(model, productKey) {
+    const productCode = getProductCode(model.id, productKey);
+    if (productCode === undefined) return null;
+
+    const isAifs = (model.id === 'ecmwf' || model.id === 'ecmwf_eu') && getModelVariant(model.id) === 'aifs';
+    if (model.id === 'aromeIFS' && getModelVariant(model.id) === 'classic') {
+      const mode = String(productCode).length === 1 ? `10${productCode}` : `1${productCode}`;
+      return `https://www.meteociel.fr/modeles/arome.php?&mode=${mode}&map=10`;
+    }
+    if (model.id === 'arome25') {
+      return `https://www.meteociel.fr/modeles/arome.php?&mode=${productCode}&map=10`;
+    }
+    if (model.id === 'aromeIFS') {
+      return `https://www.meteociel.fr/modeles/aromeifs.php?&mode=${productCode}&map=1010`;
+    }
+    if (model.id === 'wrf_eu') {
+      return `https://www.meteociel.fr/modeles/wrfnmm.php?&mode=${productCode}&map=20`;
+    }
+
+    const productModeUrls = {
+      ecmwf: `https://www.meteociel.fr/modeles/ecmwf_ctrl.php?&mode=${productCode}&carte=9&type=`,
+      ecmwf_aifs: `https://www.meteociel.fr/modeles/ecmwf_aifs.php?&mode=${productCode}&carte=9&aifs=2`,
+      icon_eu: `https://www.meteociel.fr/modeles/icon-eu.php?&mode=${productCode}&map=520`,
+      ukmo_hd: `https://www.meteociel.fr/modeles/ukmohd.php?&mode=${productCode}&map=20`,
+      wrf: `https://www.meteociel.fr/modeles/wrfnmm.php?&mode=${productCode}&map=310`,
+      arpege: `https://www.meteociel.fr/modeles/arpege.php?&mode=${productCode}&map=310`,
+      icon_eu_eu: `https://www.meteociel.fr/modeles/icon-eu.php?&mode=${productCode}&map=580`,
+      arpege_eu: `https://www.meteociel.fr/modeles/arpegee_cartes.php?&code=0&mode=${productCode}`,
+      ukmo_eu: `https://www.meteociel.fr/modeles/ukmoeu.php?&mode=${productCode}&carte=0&type=&`,
+      ecmwf_eu: `https://www.meteociel.fr/modeles/ecmwf_ctrl.php?&mode=${productCode}&carte=0`,
+      ecmwf_eu_aifs: `https://www.meteociel.fr/modeles/ecmwf_aifs.php?&mode=${productCode}&carte=0&aifs=2`
+    };
+    if (model.id === 'gfs') return 'https://www.meteociel.fr/modeles/gfs/espagne/precipitations/3h.htm';
+    if (model.id === 'gfs_eu') return 'https://www.meteociel.fr/modeles/gfse_cartes.php';
+
+    const key = isAifs ? `${model.id}_aifs` : model.id;
+    return productModeUrls[key] || null;
+  }
+
+  function syncMeteocielLink(card, model, productKey) {
+    let link = card.querySelector('.meteociel-model-link');
+    const url = getMeteocielModelUrl(model, productKey);
+    if (!url) {
+      link?.remove();
+      return;
+    }
+    if (!link) {
+      link = document.createElement('a');
+      link.className = 'meteociel-model-link';
+      link.textContent = 'See the map on MeteoCiel.';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      card.appendChild(link);
+    }
+    link.href = url;
+  }
+
   function syncProductNote(card, productKey) {
     let note = card.querySelector('.product-note');
     const text = PRODUCT_NOTES[productKey];
@@ -1313,6 +1370,7 @@ document.addEventListener('DOMContentLoaded', () => {
           fallbackMessage.textContent = 'No disponible: este producto no existe en este modelo.';
         }
         card.appendChild(fallbackMessage);
+        syncMeteocielLink(card, model, selectedProduct);
         imagesDisplayContainer.appendChild(card);
       });
       cards = [...imagesDisplayContainer.querySelectorAll('.model-card-img')];
@@ -1326,6 +1384,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (img) {
         loadImageWithRunFallback(img, card.querySelector('.image-run-fallback'), model, selectedProduct, getSelectedRun(model));
       }
+      syncMeteocielLink(card, model, selectedProduct);
     });
     syncProductNote(imagesDisplayContainer, selectedProduct);
   }
@@ -1384,6 +1443,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (existingImg) {
       const fallbackMessage = imagesDisplayContainer.querySelector('.image-run-fallback');
       syncProductNote(existingImg.closest('.model-card-img'), selectedProduct);
+      syncMeteocielLink(existingImg.closest('.model-card-img'), model, selectedProduct);
       loadImageWithRunFallback(existingImg, fallbackMessage, model, selectedProduct, selectedRun);
     } else {
       const currentHeight = imagesDisplayContainer.offsetHeight;
@@ -1403,6 +1463,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.appendChild(img);
       card.appendChild(fallbackMessage);
       syncProductNote(card, selectedProduct);
+      syncMeteocielLink(card, model, selectedProduct);
       imagesDisplayContainer.appendChild(card);
       loadImageWithRunFallback(img, fallbackMessage, model, selectedProduct, selectedRun);
     }

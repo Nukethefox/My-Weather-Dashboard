@@ -291,6 +291,39 @@ select:focus {
   line-height: 1.35;
 }
 
+.meteociel-model-link {
+  margin-top: 8px;
+  color: #38bdf8;
+  font-size: 0.9rem;
+  text-align: center;
+  text-decoration: underline;
+}
+
+.external-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  padding: 0 20px 20px;
+}
+
+.external-link-button {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: #ffe23d;
+  color: #000;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+}
+
+.external-link-button:hover {
+  background-color: #ffd000;
+}
+
 .not-available-msg {
   padding: 20px;
   color: #ef4444;
