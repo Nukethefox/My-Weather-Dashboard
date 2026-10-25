@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   };
 
-  // El token "modelo@aifs" selecciona la variante AIFS de ECMWF
   const COMPARE_SLOT_OPTIONS = {
     europa: [
       ['ecmwf_eu', 'ECMWF'], ['ecmwf_eu@aifs', 'ECMWF-AIFS'], ['gfs_eu', 'GFS'], ['ukmo_eu', 'UKMO'],
@@ -70,12 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let compareMode = 'single';
   let compareSlots = [];
   const savedCompareSlots = {};
+  let compareCardOffsets = [0, 0, 0, 0];
 
   function getCompareModeDefinition() {
     return (MODE_DEFINITIONS[regionSelect.value] || []).find(mode => mode.id === compareMode);
   }
 
-  // En modo mesoescala el hueco derecho usa AROME 1.3/IFS y, si el producto no existe en ninguno, AROME 2.5
   function resolveCompareModels(productKey) {
     const models = MODELS_CONFIG[regionSelect.value] || [];
     if (compareMode === 'meso') {
@@ -122,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadCompareSlots() {
     const key = `${regionSelect.value}:${compareMode}`;
     compareSlots = compareMode === 'single' ? [] : [...(savedCompareSlots[key] || COMPARE_DEFAULTS[key] || [])];
+    compareCardOffsets = [0, 0, 0, 0];
   }
 
   function populateModeOptions() {
@@ -1290,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function loadImageWithRunFallback(img, fallbackMessage, model, productKey, selectedRun) {
+  function loadImageWithRunFallback(img, fallbackMessage, model, productKey, selectedRun, effectiveOffset = offsetFromNow) {
     const requestId = Number(img.dataset.requestId || 0) + 1;
     img.dataset.requestId = String(requestId);
 
@@ -1311,7 +1311,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Number(img.dataset.requestId) !== requestId) return;
       while (candidateIndex < candidateRuns.length) {
         const candidateRun = candidateRuns[candidateIndex++];
-        const imageUrl = buildImageUrl(model.id, candidateRun, productKey, model);
+        const runD = new Date(Date.UTC(
+          Number(candidateRun.slice(0, 4)),
+          Number(candidateRun.slice(4, 6)) - 1,
+          Number(candidateRun.slice(6, 8)),
+          Number(candidateRun.slice(8, 10))
+        ));
+        const diffH = Math.floor((Date.now() - runD.getTime()) / (1000 * 60 * 60));
+        const targetHour = diffH + effectiveOffset;
+        const imageUrl = buildImageUrl(model.id, candidateRun, productKey, model, targetHour);
         if (!imageUrl) continue;
 
         img.hidden = false;
@@ -1370,7 +1378,43 @@ document.addEventListener('DOMContentLoaded', () => {
           fallbackMessage.textContent = 'No disponible: este producto no existe en este modelo.';
         }
         card.appendChild(fallbackMessage);
-        syncMeteocielLink(card, model, selectedProduct);
+
+        const footerContainer = document.createElement('div');
+        footerContainer.className = 'card-footer-container';
+
+        const offsetWrap = document.createElement('div');
+        offsetWrap.className = 'card-offset-container';
+        const offsetLbl = document.createElement('span');
+        offsetLbl.className = 'card-offset-label';
+        offsetLbl.textContent = 'Offset: 0h';
+        const minusBtn = document.createElement('button');
+        minusBtn.className = 'card-offset-btn';
+        minusBtn.textContent = '-1h';
+        const plusBtn = document.createElement('button');
+        plusBtn.className = 'card-offset-btn';
+        plusBtn.textContent = '+1h';
+
+        minusBtn.addEventListener('click', () => {
+          compareCardOffsets[i] = (compareCardOffsets[i] || 0) - 1;
+          updateImages();
+        });
+
+        plusBtn.addEventListener('click', () => {
+          compareCardOffsets[i] = (compareCardOffsets[i] || 0) + 1;
+          updateImages();
+        });
+
+        offsetWrap.append(offsetLbl, minusBtn, plusBtn);
+        footerContainer.appendChild(offsetWrap);
+
+        const link = document.createElement('a');
+        link.className = 'meteociel-model-link';
+        link.textContent = 'Abre el mapa en MeteoCiel';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        footerContainer.appendChild(link);
+
+        card.appendChild(footerContainer);
         imagesDisplayContainer.appendChild(card);
       });
       cards = [...imagesDisplayContainer.querySelectorAll('.model-card-img')];
@@ -1380,11 +1424,18 @@ document.addEventListener('DOMContentLoaded', () => {
     models.forEach((model, i) => {
       const card = cards[i];
       card.querySelector('.model-card-title').textContent = getModelDisplayName(model);
+      const offsetVal = compareCardOffsets[i] || 0;
+      const offsetLbl = card.querySelector('.card-offset-label');
+      if (offsetLbl) offsetLbl.textContent = `Offset: ${offsetVal >= 0 ? '+' : ''}${offsetVal}h`;
+
       const img = card.querySelector('img');
       if (img) {
-        loadImageWithRunFallback(img, card.querySelector('.image-run-fallback'), model, selectedProduct, getSelectedRun(model));
+        const effectiveOffset = offsetFromNow + offsetVal;
+        loadImageWithRunFallback(img, card.querySelector('.image-run-fallback'), model, selectedProduct, getSelectedRun(model), effectiveOffset);
       }
-      syncMeteocielLink(card, model, selectedProduct);
+      const link = card.querySelector('.meteociel-model-link');
+      const url = getMeteocielModelUrl(model, selectedProduct);
+      if (link && url) link.href = url;
     });
     syncProductNote(imagesDisplayContainer, selectedProduct);
   }
@@ -1400,7 +1451,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const day = targetDate.getDate();
     const month = targetDate.getMonth() + 1;
     const localHours = String(targetDate.getHours()).padStart(2, '0');
-    forecastHourLabel.textContent = `Ahora ${sign}${offsetFromNow}h (${day}/${month} ${localHours}h)`;
+    forecastHourLabel.textContent = `AHORA ${sign}${offsetFromNow}h (${day}/${month} ${localHours}h)`;
 
     syncControlInputs();
     updateForecastSliderRange();

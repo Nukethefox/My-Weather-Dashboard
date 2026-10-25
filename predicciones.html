@@ -14,12 +14,12 @@
     <a href="aviation.html" class="nav-btn">Predicciones aeronáuticas</a>
   </nav>
   <main class="content-container">
-    <button id="openMeteogramBtn" style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;">¡Abre el Meteograma!</button>
-    <button id="models-comparasion" style="background-color: #ffe23d; color: black; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 18px;">¡Abre el Comparador de modelos!</button>
+    <button id="openMeteogramBtn" class="external-link-button">¡Abre el Meteograma!</button>
+    <button id="models-comparasion" class="external-link-button">¡Abre el Comparador de modelos!</button>
     <div class="control-panel-main">
       <div class="panel-group">
         <label>Región:</label>
-        <select id="region-select">
+        <select id="region-select" class="region-select">
           <option value="peninsula" selected>Península Ibérica</option>
           <option value="europa">Europa</option>
         </select>
@@ -27,14 +27,14 @@
       </div>
       <div class="panel-group">
         <label for="mode-select">Modo:</label>
-        <select id="mode-select"></select>
+        <select id="mode-select" class="mode-select"></select>
       </div>
       <div class="panel-group">
         <div id="models-container" class="checkbox-group"></div>
       </div>
       <div class="panel-group">
         <label>Producto:</label>
-        <select id="product-select">
+        <select id="product-select" class="product-select">
           <option value="precip">Precipitaciones</option>
           <option value="precip_type">Tipo de precipitación</option>
           <option value="precip_acc">Precipitación acumulada</option>
@@ -58,7 +58,7 @@
       </div>
       <div class="panel-group">
         <p style="font-size: 0.85rem; color: #aaa;">Velocidad animación:</p>
-        <select id="animation-speed-select" aria-label="Velocidad de animación">
+        <select id="animation-speed-select" class="animation-speed-select" aria-label="Velocidad de animación">
           <option value="1000">Lenta</option>
           <option value="600" selected>Media</option>
           <option value="300">Rápida</option>
@@ -100,14 +100,14 @@
   <div class="meteogram-modal-content">
     <div class="meteogram-header">
       <div class="meteogram-controls">
-        <select id="meteogram-mode">
+        <select id="meteogram-mode" class="meteogram-mode">
             <option value="MeteoGraph">Diagrama</option>
             <option value="MeteoTable">Tabla detallada</option>
         </select>
-        <button id="useLocationBtn" title="Usar mi ubicación actual">Usar ubicación actual</button>
-        <input type="text" id="citySearchInput" placeholder="Ciudad o Lat,Lon" />
-        <button id="fetchMeteogramBtn">← Buscar ubicación</button>
-        <select id="meteogramModelSelect">
+        <button id="useLocationBtn" class="useLocationBtn" title="Usar mi ubicación actual">Usar ubicación actual</button>
+        <input type="text" id="citySearchInput" class="citySearchInput" placeholder="Ciudad o Lat,Lon" />
+        <button id="fetchMeteogramBtn" class="fetchMeteogramBtn">← Buscar ubicación</button>
+        <select id="meteogramModelSelect" class="meteogramModelSelect">
           <option value="ecmwf_ifs&forecast_days=10">ECMWF</option>
           <option value="dwd_icon_seamless">ICON-EU</option>
           <option value="meteofrance_seamless&forecast_days=4">ARPEGE-AROME</option>
@@ -133,10 +133,10 @@
   <div class="meteogram-modal-content">
     <div class="meteogram-header">
       <div class="meteogram-controls">
-        <button id="compareUseLocationBtn" title="Usar mi ubicación actual">Usar ubicación actual</button>
-        <input type="text" id="compareCitySearchInput" placeholder="Ciudad o Lat,Lon" />
-        <button id="fetchCompareBtn">← Buscar ubicación</button>
-        <select id="compareVariableSelect">
+        <button id="compareUseLocationBtn" class="compareUseLocationBtn" title="Usar mi ubicación actual">Usar ubicación actual</button>
+        <input type="text" id="compareCitySearchInput" class="compareCitySearchInput" placeholder="Ciudad o Lat,Lon" />
+        <button id="fetchCompareBtn" class="fetchCompareBtn">← Buscar ubicación</button>
+        <select id="compareVariableSelect" class="compareVariableSelect">
           <option value="temperature_2m">Temperatura 2m (°C)</option>
           <option value="precipitation">Precipitación (mm)</option>
           <option value="wind_speed_10m">Viento (km/h)</option>

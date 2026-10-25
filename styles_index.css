@@ -4,9 +4,30 @@
   padding: 0;
 }
 
+@font-face {
+  font-family: 'B612cockpitFONT';
+  src: url('B612/B612-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'B612cockpitFONT';
+  src: url('B612/B612-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'B612cockpitFONT';
+  src: url('B612/B612-Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: #121212;
+  font-family: 'B612cockpitFONT', sans-serif;
+  background-color: #141414;
   color: #e0e0e0;
   display: flex;
   flex-direction: column;
@@ -24,22 +45,23 @@ body {
   flex: 1;
   text-align: center;
   padding: 16px 0;
-  color: #a0a0a0;
+  color: #cacaca;
   text-decoration: none;
   font-weight: 600;
-  font-size: 1rem;
-  transition: background-color 0.2s, color 0.2s;
+  font-size: 1.15rem;
+  background-color: #221300;
+  border-bottom: 1px solid #3d3808;
 }
 
 .nav-btn:hover {
-  background-color: #2a2a2a;
-  color: #ffffff;
+  background-color: #ffc615;
+  color: #422e1f;
 }
 
 .nav-btn.active {
-  color: #3b82f6;
-  background-color: #181818;
-  border-bottom: 3px solid #3b82f6;
+  color: #422e1f;
+  font-weight: bold;
+  background-color: #ef7f1a;
 }
 
 .content-container {
@@ -76,30 +98,31 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  background-color: #1e1e1e;
+  background-color: #221300;
   padding: 12px 20px;
   border-radius: 8px;
-  border: 1px solid #333;
+  border: 1px solid #3d3808;
 }
 
 .control-panel label {
   font-size: 0.95rem;
-  color: #b0b0b0;
+  color: #cacaca;
 }
 
 #obs-select {
-  background-color: #2a2a2a;
-  color: #ffffff;
-  border: 1px solid #444;
+  background-color: #ef7f1a;
+  color: #000000;
+  border: none;
   padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.95rem;
+  border-radius: 8px;
+  font-size: 1rem;
   outline: none;
   cursor: pointer;
+  font-weight: bold;
 }
 
-#obs-select:focus {
-  border-color: #3b82f6;
+#obs-select:hover {
+  background: #ffc615;
 }
 
 .image-wrapper {
@@ -130,16 +153,17 @@ body {
 .sat-controls select {
   padding: 0.6rem 1rem;
   border-radius: 8px;
-  border: 1px solid #334155;
-  background-color: #0f172a;
-  color: #f8fafc;
-  font-size: 0.95rem;
+  border: none;
+  background-color: #ef7f1a;
+  color: #000000;
+  font-size: 1rem;
+  font-weight: bold;
   outline: none;
   cursor: pointer;
 }
 
-.sat-controls select:focus {
-  border-color: #38bdf8;
+.sat-controls select:hover {
+  background: #ffc615;
 }
 
 .sat-image-wrapper {
@@ -156,7 +180,7 @@ body {
   max-height: calc(100vh - 100px);
   object-fit: contain;
   border-radius: 8px;
-  border: 1px solid #334155;
+  border: none;
 }
 
 .search-box {
@@ -166,12 +190,30 @@ body {
   margin: 0 auto;
 }
 
+.external-link-button {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background-color: #ef7f1a;
+  color: #000000;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+}
+
+.external-link-button:hover {
+  background-color: #ffc615;
+}
+
 #metar-input {
   flex: 1;
   padding: 0.65rem 1rem;
   border-radius: 8px;
-  border: 1px solid #334155;
-  background-color: #0f172a;
+  border: 1px solid #3d3808;
+  background-color: #221300;
   color: #f8fafc;
   font-size: 0.95rem;
   outline: none;
@@ -179,15 +221,15 @@ body {
 }
 
 #metar-input:focus {
-  border-color: #38bdf8;
+  border-color: #ffc615;
 }
 
 #metar-btn {
   padding: 0.65rem 1.25rem;
   border-radius: 8px;
   border: none;
-  background-color: #0284c7;
-  color: #ffffff;
+  background-color: #ef7f1a;
+  color: #000000;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
@@ -195,7 +237,7 @@ body {
 }
 
 #metar-btn:hover {
-  background-color: #0369a1;
+  background-color: #ffc615;
 }
 
 #metar-btn:disabled {
@@ -211,11 +253,11 @@ body {
 }
 
 .metar-card {
-  background: #1e293b;
+  background: #221300;
   border-radius: 12px;
   padding: 1.25rem;
   color: #f8fafc;
-  border: 1px solid #334155;
+  border: 1px solid #ef7f1a;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
@@ -231,7 +273,7 @@ body {
 .metar-title h3 {
   margin: 0;
   font-size: 1.2rem;
-  color: #38bdf8;
+  color: #ef7f1a;
 }
 
 .metar-title span {
@@ -260,9 +302,10 @@ body {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
-  background: #0f172a;
+  background: #110a00;
   padding: 0.75rem;
   border-radius: 8px;
+  border: none;
 }
 
 .stat-item {
@@ -284,7 +327,7 @@ body {
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: #0f172a;
+  background: #110a00;
   padding: 0.75rem;
   border-radius: 8px;
 }
@@ -292,7 +335,7 @@ body {
 .compass-circle {
   width: 44px;
   height: 44px;
-  border: 2px solid #38bdf8;
+  border: 2px solid #ef7f1a;
   border-radius: 50%;
   position: relative;
   display: flex;
@@ -303,14 +346,14 @@ body {
 .compass-arrow {
   width: 2px;
   height: 20px;
-  background: #ef4444;
+  background: #ffc615;
   position: absolute;
   transform-origin: center bottom;
   top: 4px;
 }
 
 .cloud-layers {
-  background: #0f172a;
+  background: #110a00;
   padding: 0.75rem;
   border-radius: 8px;
   display: flex;
@@ -322,18 +365,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #1e293b;
+  background: #3b321e;
   padding: 0.4rem 0.6rem;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.85rem;
 }
 
 .raw-ob {
   font-family: monospace;
   font-size: 0.8rem;
-  background: #090d16;
+  background: #110a00;
   padding: 0.6rem;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #a7f3d0;
   word-break: break-all;
 }
@@ -341,14 +384,14 @@ body {
 .main-footer {
   text-align: center;
   padding: 16px;
-  background-color: #1e1e1e;
-  border-top: 1px solid #333;
+  background-color: #221300;
+  border-top: 1px solid #3d3808;
   color: #888;
   font-size: 0.85rem;
 }
 
 .main-footer a {
-  color: #3b82f6;
+  color: #3577e0;
   text-decoration: none;
 }
 
@@ -369,43 +412,39 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  background-color: #1e293b;
+  background-color: #221300;
   border-bottom: 1px solid #334155;
 }
 
 .radar-title {
   font-weight: 600;
-  color: #f8fafc;
-  font-size: 0.95rem;
+  color: #ef7f1a;
+  font-size: 1rem;
 }
 
 #radar-timestamp {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: #38bdf8;
+  color: #ef7f1a;
   font-family: monospace;
 }
 
 #radar-animation-speed-select {
   min-height: 34px;
   padding: 0 30px 0 10px;
-  border: 1px solid #475569;
-  border-radius: 6px;
-  background: #0f172a;
-  color: #e2e8f0;
-  font-size: 0.82rem;
+  border: none;
+  border-radius: 8px;
+  background: #ef7f1a;
+  color: #000000;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
 }
 
 #radar-animation-speed-select:hover {
-  border-color: #38bdf8;
+  background: #ffc615;
 }
 
-#radar-animation-speed-select:focus-visible {
-  outline: 2px solid #38bdf8;
-  outline-offset: 2px;
-}
 
 .radar-buttons {
   display: flex;
@@ -415,10 +454,10 @@ body {
 .radar-buttons button {
   width: 34px;
   height: 34px;
-  border: 1px solid #334155;
-  border-radius: 6px;
-  background-color: #0f172a;
-  color: #f8fafc;
+  border: none;
+  border-radius: 8px;
+  background-color: #ef7f1a;
+  color: #000000;
   cursor: pointer;
   font-size: 1rem;
   display: flex;
@@ -428,16 +467,16 @@ body {
 }
 
 .radar-buttons button:hover {
-  background-color: #334155;
-  border-color: #38bdf8;
+  background-color: #ffc615;
 }
 
 .radar-keyboard-help {
   margin: 0;
   padding: 0.45rem 1rem;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid #221300;
   color: #94a3b8;
   font-size: 0.8rem;
+  background: #221300;
 }
 
 #radar-map {
@@ -463,12 +502,12 @@ body {
 
 .clouds-toggle input {
   cursor: pointer;
-  accent-color: #38bdf8;
+  accent-color: #ef7f1a;
 }
 
 .radar-legend {
   padding: 10px 16px 12px;
-  background: #111c2b;
+  background: #221300;
   border-top: 1px solid #2b3d50;
   color: #e2e8f0;
 }

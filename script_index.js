@@ -490,9 +490,9 @@ async function fetchMetarData() {
   const currentDecimalTime = now.getHours() + now.getMinutes() / 60;
 
   const visibleHours = [
-    [9.0, 17.25], [8.9, 17.9], [8.25, 18.4], [7.9, 19.9],
+    [9.0, 17.1], [8.9, 17.9], [8.25, 18.4], [7.9, 19.9],
     [7.5, 20.5], [7.0, 21.0], [7.5, 20.9], [8.0, 20.0],
-    [8.3, 19.1], [8.5, 18.4], [8.75, 17.25], [9.0, 17.25]
+    [8.3, 19.0], [8.5, 18.0], [8.75, 17.1], [9.0, 17.1]
   ];
 
   const [start, end] = visibleHours[month];

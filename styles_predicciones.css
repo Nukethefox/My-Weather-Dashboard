@@ -4,9 +4,30 @@
   padding: 0;
 }
 
+@font-face {
+  font-family: 'B612cockpitFONT';
+  src: url('B612/B612-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'B612cockpitFONT';
+  src: url('B612/B612-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'B612cockpitFONT';
+  src: url('B612/B612-Italic.ttf') format('truetype');
+  font-weight: normal;
+  font-style: italic;
+}
+
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: #121212;
+  font-family: 'B612cockpitFONT', sans-serif;
+  background-color: #141414;
   color: #e0e0e0;
   display: flex;
   flex-direction: column;
@@ -24,22 +45,23 @@ body {
   flex: 1;
   text-align: center;
   padding: 16px 0;
-  color: #a0a0a0;
+  color: #cacaca;
   text-decoration: none;
   font-weight: 600;
-  font-size: 1rem;
-  transition: background-color 0.2s, color 0.2s;
+  font-size: 1.15rem;
+  background-color: #221300;
+  border-bottom: 1px solid #3d3808;
 }
 
 .nav-btn:hover {
-  background-color: #2a2a2a;
-  color: #ffffff;
+  background-color: #ffc615;
+  color: #422e1f;
 }
 
 .nav-btn.active {
-  color: #3b82f6;
-  background-color: #181818;
-  border-bottom: 3px solid #3b82f6;
+  color: #422e1f;
+  font-weight: bold;
+  background-color: #ef7f1a;
 }
 
 .content-container {
@@ -78,19 +100,38 @@ body {
   font-weight: 600;
 }
 
-select {
-  background-color: #2a2a2a;
-  color: #ffffff;
-  border: 1px solid #444;
+.region-select, .mode-select, .product-select, .animation-speed-select, .meteogram-mode, .meteogramModelSelect, .compareVariableSelect {
+  background-color: #ef7f1a;
+  color: #422e1f;
+  border: none;
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 0.95rem;
   outline: none;
   cursor: pointer;
+  font-weight: bold;
 }
 
-select:focus {
-  border-color: #3b82f6;
+.region-select:hover, .mode-select:hover, .product-select:hover, .animation-speed-select:hover, .meteogram-mode:hover, .meteogramModelSelect:hover, .compareVariableSelect:hover {
+  background: #ffc615;
+}
+
+.model-option select {
+  background-color: rgba(0, 0, 0, 0.4);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.model-option select:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: #ef7f1a;
+  color: black;
 }
 
 .checkbox-group {
@@ -176,8 +217,8 @@ select:focus {
   padding: 8px 16px;
   border-radius: 6px;
   border: none;
-  background-color: #0284c7;
-  color: #ffffff;
+  background-color: #ef7f1a;
+  color: #422e1f;
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
@@ -185,13 +226,14 @@ select:focus {
 }
 
 .time-nav button:hover {
-  background-color: #0369a1;
+  background-color: #FFC615;
+  color: #422e1f;
 }
 
 #forecast-hour-label {
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: bold;
-  color: #38bdf8;
+  color: #ffc615;
   font-family: monospace;
   min-width: 160px;
   text-align: center;
@@ -241,6 +283,18 @@ select:focus {
 
 .compare-slot select {
   flex: 1;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background-color: #ef7f1a;
+  color: #000000;
+  font-weight: bold;
+  outline: none;
+  cursor: pointer;
+}
+
+.compare-slot select:hover {
+  background: #ffc615;
 }
 
 .compare-slot strong {
@@ -309,20 +363,22 @@ select:focus {
   padding: 0 20px 20px;
 }
 
-.external-link-button {
+.external-link-button, .useLocationBtn, .fetchMeteogramBtn, .compareUseLocationBtn, .fetchCompareBtn {
   display: inline-block;
   padding: 8px 12px;
-  border-radius: 4px;
-  background-color: #ffe23d;
-  color: #000;
+  border-radius: 8px;
+  border: none;
+  background-color: #ef7f1a;
+  color: #000000;
+  cursor: pointer;
   font-size: 18px;
   font-weight: bold;
   text-align: center;
   text-decoration: none;
 }
 
-.external-link-button:hover {
-  background-color: #ffd000;
+.external-link-button:hover, .useLocationBtn:hover, .fetchMeteogramBtn:hover, .compareUseLocationBtn:hover, .fetchCompareBtn:hover {
+  background-color: #ffc615;
 }
 
 .not-available-msg {
@@ -335,14 +391,14 @@ select:focus {
 .main-footer {
   text-align: center;
   padding: 16px;
-  background-color: #1e1e1e;
-  border-top: 1px solid #333;
+  background-color: #221300;
+  border-top: 1px solid #3d3808;
   color: #888;
   font-size: 0.85rem;
 }
 
 .main-footer a {
-  color: #3b82f6;
+  color: #3577e0;
   text-decoration: none;
 }
 
@@ -416,21 +472,6 @@ select:focus {
   flex-wrap: wrap;
 }
 
-.meteogram-controls input, .meteogram-controls select, .meteogram-controls button {
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid #475569;
-  background: #0f172a;
-  color: #fff;
-}
-
-.meteogram-controls button {
-  background: #2563eb;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-}
-
 .close-btn {
   background: transparent;
   border: none;
@@ -447,18 +488,29 @@ select:focus {
 }
 
 .date-picker-input {
-  background-color: #2a2a2a;
+  background-color: #221300;
   color: #ffffff;
-  border: 1px solid #444;
+  border: 1px solid #3d3808;
   padding: 7px 10px;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  border-radius: 8px;
+  font-size: 1rem;
   outline: none;
   cursor: pointer;
 }
 
-.date-picker-input:focus {
-  border-color: #3b82f6;
+.citySearchInput, .compareCitySearchInput {
+  background-color: #221300;
+  color: #ffffff;
+  border: 1px solid #3d3808;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  cursor: text;
+}
+
+.date-picker-input:focus, .citySearchInput:focus, .compareCitySearchInput:focus {
+  border-color: #ffc615;
 }
 
 .models-limit-info {
@@ -625,8 +677,6 @@ select:focus {
 
 .model-select-btn {
     padding: 6px 12px;
-    border: 1px solid #ccc;
-    background-color: #f0f0f0;
     cursor: pointer;
     border-radius: 4px;
     font-weight: bold;
@@ -635,10 +685,11 @@ select:focus {
 
 .model-select-btn:hover,
 .model-select-btn.active {
-    background-color: #007bff;
-    color: #ffffff;
+    background-color: #FFC615;
+    color: #422e1f;
     text-decoration: underline;
-    border-color: #0056b3;
+    border-bottom: 4px dashed rgb(0, 0, 0);
+    border-top: 4px dashed rgb(0, 0, 0);
 }
 
 .model-separator {
@@ -784,4 +835,39 @@ tr.row-extra td.sticky-col {
 .disp-alta {
   background-color: rgb(255, 0, 0) !important;
   color: #fdfdfd;
+}
+
+.card-footer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.card-offset-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-offset-btn {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: none;
+  background-color: #ef7f1a;
+  color: #422e1f;
+  font-weight: bold;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.card-offset-btn:hover {
+  background-color: #ffc615;
+}
+
+.card-offset-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
 }
