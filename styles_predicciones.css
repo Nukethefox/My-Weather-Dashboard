@@ -27,8 +27,8 @@
 
 body {
   font-family: 'B612cockpitFONT', sans-serif;
-  background-color: #141414;
-  color: #e0e0e0;
+  background-color: #0f0d0b;
+  color: #cacaca;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -36,9 +36,9 @@ body {
 
 .main-nav {
   width: 100%;
-  background-color: #1e1e1e;
+  background-color: #1a130f;
   display: flex;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #3d3808;
 }
 
 .nav-btn {
@@ -48,20 +48,98 @@ body {
   color: #cacaca;
   text-decoration: none;
   font-weight: 600;
-  font-size: 1.15rem;
-  background-color: #221300;
+  font-size: 1.2rem;
+  background-color: #1a130f;
   border-bottom: 1px solid #3d3808;
 }
 
 .nav-btn:hover {
   background-color: #ffc615;
-  color: #422e1f;
+  color: #000000;
 }
 
 .nav-btn.active {
   color: #422e1f;
   font-weight: bold;
   background-color: #ef7f1a;
+}
+
+.main-footer {
+  text-align: center;
+  padding: 16px;
+  background-color: #1a130f;
+  border-top: 1px solid #3d3808;
+  color: #cacaca;
+  font-size: 0.9rem;
+}
+
+.main-footer a {
+  color: #74a1e9;
+  text-decoration: none;
+}
+
+.main-footer a:hover {
+  text-decoration: underline;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  background-color: #ef7f1a;
+  color: #000000;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+button:hover {
+  background-color: #ffc615;
+  color: #000000;
+}
+
+button:disabled {
+  background-color: #b36749;
+  color: #000000;
+  cursor: not-allowed;
+}
+
+select {
+  border: none;
+  border-radius: 8px;
+  background-color: #ef7f1a;
+  color: #000000;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+select:hover,
+select:focus {
+  border: none;
+  background-color: #ffc615;
+  color: #000000;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="datetime-local"] {
+  border: 1px solid #3d2f26;
+  border-radius: 8px;
+  background-color: #1a130f;
+  color: #cacaca;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+input[type="text"]:hover,
+input[type="text"]:focus,
+input[type="date"]:hover,
+input[type="date"]:focus,
+input[type="datetime-local"]:hover,
+input[type="datetime-local"]:focus {
+  border-color: #ffc615;
+  outline: none;
 }
 
 .content-container {
@@ -77,8 +155,8 @@ body {
 .control-panel-main {
   width: 100%;
   max-width: 1100px;
-  background-color: #1e1e1e;
-  border: 1px solid #333;
+  background-color: #1a130f;
+  border: 1px solid #3d3808;
   border-radius: 8px;
   padding: 16px 20px;
   display: flex;
@@ -94,36 +172,30 @@ body {
 }
 
 .panel-group label {
-  font-size: 0.95rem;
-  color: #b0b0b0;
+  font-size: 0.99rem;
+  color: #cacaca;
   min-width: 140px;
-  font-weight: 600;
-}
-
-.region-select, .mode-select, .product-select, .animation-speed-select, .meteogram-mode, .meteogramModelSelect, .compareVariableSelect {
-  background-color: #ef7f1a;
-  color: #422e1f;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  outline: none;
-  cursor: pointer;
   font-weight: bold;
 }
 
-.region-select:hover, .mode-select:hover, .product-select:hover, .animation-speed-select:hover, .meteogram-mode:hover, .meteogramModelSelect:hover, .compareVariableSelect:hover {
+.region-select, .mode-select, .product-select, .animation-speed-select, .meteogram-mode, .meteogramModelSelect, .compareVariableSelect {
+  padding: 8px 12px;
+  outline: none;
+  font-weight: bold;
+}
+
+.region-select:focus, .mode-select:focus, .product-select:focus, .animation-speed-select:focus, .meteogram-mode:focus, .meteogramModelSelect:focus, .compareVariableSelect:focus {
   background: #ffc615;
 }
 
 .model-option select {
   background-color: rgba(0, 0, 0, 0.4);
   color: #f1f5f9;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.356);
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: 20px;
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -145,10 +217,10 @@ body {
   grid-template-columns: max-content max-content;
   align-items: center;
   gap: 6px 8px;
-  background: var(--model-run-background, #2a2a2a);
+  background: var(--model-run-background, #1a130f);
   padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #3d3d3d;
+  border-radius: 8px;
+  border: 1px solid #3d3808;
   font-size: 0.9rem;
   transition: background-color 0.2s ease;
 }
@@ -158,17 +230,10 @@ body {
   grid-template-columns: max-content max-content max-content;
 }
 
-.model-availability-status {
-  display: block;
-  margin-top: 6px;
-  color: #b8b8b8;
-  font-size: 0.75rem;
-}
-
 .model-update-info {
   grid-column: 1 / -1;
   max-width: 260px;
-  color: #b8b8b8;
+  color: #cacaca;
   font-size: 0.75rem;
   line-height: 1.3;
   white-space: pre-line;
@@ -201,40 +266,31 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: #1e1e1e;
+  background-color: #1a130f;
   justify-content: center;
   margin-top: 8px;
   padding: 12px 0;
-  border-top: 1px solid #2a2a2a;
-  border-bottom: 1px solid #333;
   width: 100%;
   max-width: 1100px;
-  border: 1px solid #333;
+  border: 1px solid #3d3808;
   border-radius: 8px;
 }
 
 .time-nav button {
   padding: 8px 16px;
-  border-radius: 6px;
-  border: none;
-  background-color: #ef7f1a;
-  color: #422e1f;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
+  font-weight: bold;
   transition: background-color 0.2s;
 }
 
 .time-nav button:hover {
   background-color: #FFC615;
-  color: #422e1f;
+  color: #000000;
 }
 
 #forecast-hour-label {
   font-size: 1.15rem;
   font-weight: bold;
-  color: #ffc615;
-  font-family: monospace;
+  color: #cacaca;
   min-width: 160px;
   text-align: center;
 }
@@ -263,7 +319,7 @@ body {
 
 .model-card-title {
   margin-bottom: 8px;
-  color: #e2e8f0;
+  color: #cacaca;
   font-size: 0.95rem;
 }
 
@@ -277,20 +333,14 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #b0b0b0;
+  color: #cacaca;
   font-size: 0.9rem;
 }
 
 .compare-slot select {
   flex: 1;
   padding: 0.6rem 1rem;
-  border-radius: 8px;
-  border: none;
-  background-color: #ef7f1a;
-  color: #000000;
   font-weight: bold;
-  outline: none;
-  cursor: pointer;
 }
 
 .compare-slot select:hover {
@@ -298,7 +348,7 @@ body {
 }
 
 .compare-slot strong {
-  color: #ffffff;
+  color: #cacaca;
 }
 
 @media (max-width: 900px) {
@@ -314,11 +364,30 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #181818;
-  border: 1px solid #333;
+  background: #1a130f;
+  border: 1px solid #3d3808;
   border-radius: 8px;
   padding: 10px;
   overflow: hidden;
+  position: relative;
+}
+
+.images-container--zoom .model-card-img img {
+  cursor: crosshair;
+  will-change: transform;
+}
+
+.zoom-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+@media (hover: none) {
+  .images-container--zoom .model-card-img img {
+    transform: none !important;
+  }
 }
 
 .model-card-img img {
@@ -340,18 +409,18 @@ body {
   display: block;
   max-width: 720px;
   margin: 0 0 8px;
-  color: #94a3b8;
+  color: #cacaca;
   text-align: center;
   line-height: 1.35;
 }
 
 .meteociel-model-link {
   margin-top: 8px;
-  color: #38bdf8;
-  font-size: 0.9rem;
+  color: #85b5fd;
+  font-size: 1rem;
   font-weight: bold;
   text-align: center;
-  text-decoration: none;
+  text-decoration: underline;
 }
 
 .external-links {
@@ -366,12 +435,13 @@ body {
 .external-link-button, .useLocationBtn, .fetchMeteogramBtn, .compareUseLocationBtn, .fetchCompareBtn {
   display: inline-block;
   padding: 8px 12px;
-  border-radius: 8px;
   border: none;
+  border-radius: 8px;
   background-color: #ef7f1a;
   color: #000000;
   cursor: pointer;
-  font-size: 18px;
+  font-family: inherit;
+  font-size: 0.95rem;
   font-weight: bold;
   text-align: center;
   text-decoration: none;
@@ -379,55 +449,14 @@ body {
 
 .external-link-button:hover, .useLocationBtn:hover, .fetchMeteogramBtn:hover, .compareUseLocationBtn:hover, .fetchCompareBtn:hover {
   background-color: #ffc615;
+  color: #000000;
 }
 
 .not-available-msg {
   padding: 20px;
-  color: #ef4444;
+  color: #ff0000;
   font-size: 0.9rem;
   text-align: center;
-}
-
-.main-footer {
-  text-align: center;
-  padding: 16px;
-  background-color: #221300;
-  border-top: 1px solid #3d3808;
-  color: #888;
-  font-size: 0.85rem;
-}
-
-.main-footer a {
-  color: #3577e0;
-  text-decoration: none;
-}
-
-.main-footer a:hover {
-  text-decoration: underline;
-}
-
-#preload-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  border: 1px solid #3b82f6;
-  background-color: transparent;
-  color: #3b82f6;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-#preload-btn:hover {
-  background-color: #3b82f6;
-  color: #ffffff;
-}
-
-#preload-btn:disabled {
-  border-color: #555;
-  color: #888;
-  cursor: not-allowed;
-  background-color: transparent;
 }
 
 .hidden { display: none !important; }
@@ -446,10 +475,11 @@ body {
 }
 
 .meteogram-modal-content {
-  background: #1e293b;
-  color: #f8fafc;
-  width: 95vw;
-  height: 90vh;
+  background: #1a130f;
+  color: #cacaca;
+  border: 1px solid #3d3808;
+  width: 100vw;
+  height: 100vh;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -463,7 +493,7 @@ body {
   align-items: center;
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #334155;
+  border-bottom: none;
 }
 
 .meteogram-controls {
@@ -473,54 +503,44 @@ body {
 }
 
 .close-btn {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  font-size: 28px;
-  cursor: pointer;
+  padding: 8px 12px;
+  color: #000000;
+  font-size: 0.95rem;
+  margin-right: 12px;
 }
 
 .meteogram-loading {
   text-align: center;
   padding: 20px;
   font-weight: bold;
-  color: #38bdf8;
+  color: #ffc615;
 }
 
 .date-picker-input {
-  background-color: #221300;
-  color: #ffffff;
-  border: 1px solid #3d3808;
+  background-color: #1a130f;
+  color: #cacaca;
+  border: 1px solid #3d2f26;
   padding: 7px 10px;
-  border-radius: 8px;
-  font-size: 1rem;
   outline: none;
   cursor: pointer;
 }
 
 .citySearchInput, .compareCitySearchInput {
-  background-color: #221300;
-  color: #ffffff;
-  border: 1px solid #3d3808;
+  background-color: #1a130f;
+  color: #cacaca;
+  border: 1px solid #3d2f26;
   padding: 7px 10px;
-  border-radius: 8px;
-  font-size: 1rem;
   outline: none;
   cursor: text;
 }
 
-.date-picker-input:focus, .citySearchInput:focus, .compareCitySearchInput:focus {
+.date-picker-input:focus, .date-picker-input:hover, .citySearchInput:focus, .citySearchInput:hover, .compareCitySearchInput:focus, .compareCitySearchInput:hover {
   border-color: #ffc615;
-}
-
-.models-limit-info {
-  font-size: 0.85rem;
-  color: #aaa;
-  margin-left: 10px;
-  align-self: center;
+  background-color: #1a130f;
 }
 
 .model-select-btn.disabled-model {
+  border: 2px outset #4b5563;
   background-color: #6b7280; 
   color: #d1d5db; 
   border-color: #4b5563; 
@@ -535,8 +555,9 @@ body {
   flex: 1;
   overflow-x: auto;
   overflow-y: auto;
-  background: #0f172a;
-  border-radius: 6px;
+  background: #1a130f;
+  border: 1px solid #3d3808;
+  border-radius: 8px;
   padding: 0;
 }
 
@@ -544,70 +565,83 @@ body {
   border-collapse: separate;
   border-spacing: 0;
   width: max-content;
-  color: #f8fafc;
+  color: #cacaca;
   font-size: 13px;
   text-align: center;
+  border-radius: 8px;
 }
 
 .meteogram-table th, 
 .meteogram-table td {
   padding: 8px 10px;
-  border-right: 1px solid #334155;
-  border-bottom: 1px solid #334155;
+  border-right: 1px solid #3d3808;
+  border-bottom: 1px solid #3d3808;
   white-space: nowrap;
 }
 
 .meteogram-table .sticky-col {
   position: sticky;
   left: 0;
-  background-color: #1e293b;
+  background-color: #241a15;
   z-index: 20;
   font-weight: bold;
   text-align: left;
-  border-right: 2px solid #475569;
+  border-right: 2px solid #3d3808;
 }
 
 .meteogram-table thead tr:nth-child(1) td {
-  background-color: #1e293b;
+  background-color: #1a130f;
   font-weight: bold;
-  color: #38bdf8;
+  color: #cacaca;
 }
 
 .meteogram-table thead tr:nth-child(2) td {
-  background-color: #1e293b;
-  color: #f1f5f9;
+  background-color: #1a130f;
+  color: #cacaca;
 }
 
 .meteogram-table thead tr:nth-child(3) td {
-  background-color: #1e293b;
-  color: #fbbf24;
+  background-color: #1a130f;
+  color: #cacaca;
   font-size: 11px;
 }
 
 .meteogram-table tbody tr:nth-child(even) {
-  background-color: #131d31;
+  background-color: #271e18;
 }
 
 .meteogram-table tbody tr:nth-child(odd) {
-  background-color: #0f172a;
+  background-color: #1a130f;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 .meteogram-table td.day-border,
 .meteogram-table th.day-border {
-  border-left: 2px solid #38bdf8 !important;
+  border-left: 2px solid #ef7f1a !important;
 }
 
 .daily-card {
   flex: 1;
   text-align: center;
   font-size: 11px;
-  border-right: 1px dashed #475569;
+  border-right: 1px dashed #ff0000;
   padding: 0 4px;
 }
 
 .daily-card .day-title {
   font-weight: bold;
-  color: #38bdf8;
+  color: #58f838;
   margin-bottom: 2px;
 }
 
@@ -619,6 +653,13 @@ body {
   color: #fbbf24;
   font-size: 10px;
 }
+
+
+
+
+
+
+
 
 .weather-icons-track {
   position: relative;
@@ -677,19 +718,23 @@ body {
 
 .model-select-btn {
     padding: 6px 12px;
-    cursor: pointer;
-    border-radius: 4px;
     font-weight: bold;
-    font-size: 13px;
 }
 
 .model-select-btn:hover,
 .model-select-btn.active {
-    background-color: #FFC615;
-    color: #422e1f;
+    color: #000000;
     text-decoration: underline;
     border-bottom: 4px dashed rgb(0, 0, 0);
     border-top: 4px dashed rgb(0, 0, 0);
+}
+
+.model-select-btn.active {
+    background-color: #ef7f1a;
+}
+
+.model-select-btn:hover {
+    background-color: #ffc615;
 }
 
 .model-separator {
@@ -702,9 +747,8 @@ body {
 }
 
 .model-select-btn.warning-model {
-  background-color: #040ebd;
+  background-color: #a55a19;
   color: #ffffff;
-  border-color: #b45309;
 }
 
 .time-nav {
@@ -812,15 +856,17 @@ body {
 }
 
 tr.row-extra {
-  background-color: #0f172a;
-  border-top: 1px solid #334155;
+  background-color: #1a130f;
+  border-top: 1px solid #3d3808;
 }
 
 tr.row-extra td.sticky-col {
-  background-color: #0f172a !important;
-  color: #38bdf8;
+  background-color: #1a130f !important;
+  color: #cacaca;
   font-weight: 700;
 }
+
+
 
 .disp-baja {
   background-color: rgb(1, 254, 94) !important;
@@ -836,6 +882,18 @@ tr.row-extra td.sticky-col {
   background-color: rgb(255, 0, 0) !important;
   color: #fdfdfd;
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 .card-footer-container {
   display: flex;
@@ -854,13 +912,8 @@ tr.row-extra td.sticky-col {
 
 .card-offset-btn {
   padding: 4px 8px;
-  border-radius: 4px;
-  border: none;
-  background-color: #ef7f1a;
-  color: #422e1f;
+  color: #000000;
   font-weight: bold;
-  font-size: 0.8rem;
-  cursor: pointer;
 }
 
 .card-offset-btn:hover {
