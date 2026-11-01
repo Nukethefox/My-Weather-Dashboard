@@ -23,7 +23,7 @@
           <option value="peninsula" selected>Península Ibérica</option>
           <option value="europa">Europa</option>
         </select>
-        <small id="model-availability-status" class="model-availability-status">Comprobando disponibilidad de modelos...</small>
+        <label id="model-availability-status">Comprobando disponibilidad de modelos...</label>
       </div>
       <div class="panel-group">
         <label for="mode-select">Modo:</label>
@@ -57,13 +57,16 @@
         </select>
       </div>
       <div class="panel-group">
-        <p style="font-size: 0.85rem; color: #aaa;">Velocidad animación:</p>
+        <label>Velocidad animación:</label>
         <select id="animation-speed-select" class="animation-speed-select" aria-label="Velocidad de animación">
           <option value="1000">Lenta</option>
           <option value="600" selected>Media</option>
           <option value="300">Rápida</option>
         </select>
-        <p style="font-size: 0.85rem; color: #aaa;">Usa las teclas [←][→] para retroceder/avanzar 1h, y [Espacio] para reproducir/pausar la animación.</p>
+        <label>Usa las teclas [←][→] para retroceder/avanzar 1h, y [Espacio] para reproducir/pausar la animación.</label>
+      </div>
+      <div class="panel-group">
+        <label class="zoom-toggle"><input type="checkbox" id="image-zoom-toggle"> Zoom sobre imágenes [Z]</label>
       </div>
     </div>
     <div class="panel-group time-nav">
