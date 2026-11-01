@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const plus12TimeBtn = document.getElementById('plus12-time-btn');
   const animateModelBtn = document.getElementById('animate-model-btn');
   const animationSpeedSelect = document.getElementById('animation-speed-select');
+  const imageZoomToggle = document.getElementById('image-zoom-toggle');
+  const IMAGE_ZOOM_FACTOR = 2.5;
   const forecastHourLabel = document.getElementById('forecast-hour-label');
   const imagesDisplayContainer = document.getElementById('images-display-container');
   const modelSelectorButtons = document.getElementById('model-selector-buttons');
@@ -218,16 +220,13 @@ document.addEventListener('DOMContentLoaded', () => {
     ]
   };
 
-  const RUN_HOUR_COLORS = {
-    '00': { background: '#0e346d', accent: '#1d2992' },
-    '03': { background: '#811a08', accent: '#c6170e' },
-    '06': { background: '#339128', accent: '#198c11' },
-    '09': { background: '#b01a9e', accent: '#b40eae' },
-    '12': { background: '#0e346d', accent: '#1d2992' },
-    '15': { background: '#811a08', accent: '#c6170e' },
-    '18': { background: '#339128', accent: '#198c11' },
-    '21': { background: '#b01a9e', accent: '#b40eae' }
-  };
+  const RUN_RANK_COLORS = [
+    { background: '#339128', accent: '#198c11' },
+    { background: '#811a08', accent: '#c6170e' },
+    { background: '#b01a9e', accent: '#b40eae' },
+    { background: '#0e346d', accent: '#1d2992' }
+  ];
+  const RUN_AGE_LIMITS_HOURS = [6, 12, 24];
 
   function getModelVariant(modelId) {
     const model = [...MODELS_CONFIG.peninsula, ...MODELS_CONFIG.europa].find(item => item.id === modelId);
@@ -324,13 +323,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusLabels = {
       checking: 'Comprobando ciclo...',
       current: `Ciclo ${verifiedRunHour}Z completo (hasta ${completeLimit})`,
-      processing: `Mostrando ciclo ${verifiedRunHour}Z; procesando ciclo ${preparingRunHour ?? ''}Z`,
+      processing: `Último ciclo disponible ${verifiedRunHour}Z; procesando ciclo ${preparingRunHour ?? ''}Z`,
       partial: `Ciclo ${verifiedRunHour}Z parcialmente disponible (hasta ${verification.verifiedRun ? getModelLimitDate(getEffectiveMaxHour(model, verification.verifiedRun), verification.verifiedRun) : ''}), anterior no disponible`,
       unavailable: 'No se pudo verificar el ciclo',
       unchecked: 'Ciclo sin comprobar',
       unsupported: 'Producto no disponible para este modelo'
     };
     freshnessLabel.textContent = statusLabels[verification.state] || statusLabels.checking;
+    if (verification.state === 'current') {
+      const nextRun = getNextModelRunDate(model, new Date(Date.UTC(
+        Number(verification.verifiedRun.slice(0, 4)),
+        Number(verification.verifiedRun.slice(4, 6)) - 1,
+        Number(verification.verifiedRun.slice(6, 8)),
+        Number(verification.verifiedRun.slice(8, 10))
+      )));
+      const delayMs = getModelDelayHours(model, nextRun.getUTCHours()) * 3600000;
+      const remainingMin = Math.ceil((nextRun.getTime() + delayMs - now.getTime()) / 60000);
+      freshnessLabel.textContent += remainingMin > 0
+        ? `. Siguiente disponible en ~${Math.floor(remainingMin / 60)}h ${remainingMin % 60}min`
+        : '. Siguiente disponible en breve';
+    }
     info.replaceChildren(ageLabel, document.createElement('br'), freshnessLabel);
   }
 
@@ -342,15 +354,27 @@ document.addEventListener('DOMContentLoaded', () => {
     return model.maxHoursByRun?.[runHourUtc] ?? model.maxHour;
   }
 
-  function updateModelOptionRunColor(model) {
-    const runSelect = document.getElementById(`run-${model.id}`);
-    const wrapper = runSelect?.closest('.model-option');
-    if (!runSelect || !wrapper || !runSelect.value) return;
+  function getRunAgeColors(runStr) {
+    const runTime = Date.UTC(
+      Number(runStr.slice(0, 4)),
+      Number(runStr.slice(4, 6)) - 1,
+      Number(runStr.slice(6, 8)),
+      Number(runStr.slice(8, 10))
+    );
+    const ageHours = (Date.now() - runTime) / 3600000;
+    const index = RUN_AGE_LIMITS_HOURS.findIndex(limit => ageHours < limit);
+    return RUN_RANK_COLORS[index === -1 ? RUN_RANK_COLORS.length - 1 : index];
+  }
 
-    const runHour = runSelect.value.slice(8, 10);
-    const colors = RUN_HOUR_COLORS[runHour];
-    wrapper.dataset.runHour = runHour;
-    if (colors) wrapper.style.setProperty('--model-run-background', colors.background);
+  function updateModelOptionRunColor() {
+    (MODELS_CONFIG[regionSelect.value] || []).forEach(model => {
+      const runSelect = document.getElementById(`run-${model.id}`);
+      const wrapper = runSelect?.closest('.model-option');
+      if (wrapper && runSelect.value) {
+        wrapper.style.setProperty('--model-run-background', getRunAgeColors(runSelect.value).background);
+      }
+    });
+    updateForecastSliderRange();
   }
 
   function updateForecastSliderRange() {
@@ -378,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const { maxSliderValue, runStr } = limiting;
     const limitPercent = (maxSliderValue / 239) * 100;
-    const colors = RUN_HOUR_COLORS[runStr.slice(8, 10)];
+    const colors = getRunAgeColors(runStr);
 
     hourPickerSlider.dataset.runHour = runStr.slice(8, 10);
     hourPickerSlider.style.setProperty('--forecast-limit-percent', `${limitPercent}%`);
@@ -746,7 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!link) {
       link = document.createElement('a');
       link.className = 'meteociel-model-link';
-      link.textContent = 'Abre el mapa en MeteoCiel';
+      link.textContent = 'Abre el mapa en Meteociel';
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       card.appendChild(link);
@@ -1545,6 +1569,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, RUN_DETECTION_INTERVAL_MS);
   setInterval(() => {
     (MODELS_CONFIG[regionSelect.value] || []).forEach(updateModelFreshnessInfo);
+    updateModelOptionRunColor();
   }, 60 * 1000);
   productSelect.addEventListener('change', () => {
     stopModelAnimation();
@@ -1604,8 +1629,51 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (event.key === 'ArrowRight') {
       event.preventDefault();
       nextTimeBtn.click();
+    } else if (event.key.toLowerCase() === 'z' && imageZoomToggle) {
+      imageZoomToggle.checked = !imageZoomToggle.checked;
+      applyImageZoomState();
     }
   });
+
+  function getZoomImages() {
+    return [...imagesDisplayContainer.querySelectorAll('.model-card-img img')];
+  }
+
+  function applyImageZoomState() {
+    const enabled = imageZoomToggle.checked;
+    imagesDisplayContainer.classList.toggle('images-container--zoom', enabled);
+    if (!enabled) resetImageZoom();
+  }
+
+  function resetImageZoom() {
+    getZoomImages().forEach(img => { img.style.transform = ''; });
+  }
+
+  if (imageZoomToggle) {
+    imageZoomToggle.addEventListener('change', () => {
+      imageZoomToggle.blur();
+      applyImageZoomState();
+    });
+
+    imagesDisplayContainer.addEventListener('mousemove', (event) => {
+      if (!imageZoomToggle.checked) return;
+      const source = event.target;
+      if (!(source instanceof HTMLImageElement) || !source.closest('.model-card-img')) return;
+
+      const card = source.parentElement;
+      const cardRect = card.getBoundingClientRect();
+      const x = ((event.clientX - cardRect.left - card.clientLeft - source.offsetLeft) / source.offsetWidth) * 100;
+      const y = ((event.clientY - cardRect.top - card.clientTop - source.offsetTop) / source.offsetHeight) * 100;
+      const origin = `${Math.min(100, Math.max(0, x))}% ${Math.min(100, Math.max(0, y))}%`;
+
+      getZoomImages().forEach(img => {
+        img.style.transformOrigin = origin;
+        img.style.transform = `scale(${IMAGE_ZOOM_FACTOR})`;
+      });
+    });
+
+    imagesDisplayContainer.addEventListener('mouseleave', resetImageZoom);
+  }
 
   if (minus12TimeBtn) {
     minus12TimeBtn.addEventListener('click', () => {
