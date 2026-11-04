@@ -241,6 +241,34 @@ input[type="datetime-local"]:focus {
   width: 100%;
 }
 
+#sat-link {
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+  max-width: 100%;
+  line-height: 0;
+}
+
+.zoom-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.images-container--zoom #sat-image {
+  cursor: crosshair;
+  will-change: transform;
+}
+
+@media (hover: none) {
+  .images-container--zoom #sat-image {
+    transform: none !important;
+  }
+}
+
 #sat-image {
   width: auto;
   height: auto;
