@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const productSelect = document.getElementById('product-select');
   const prevTimeBtn = document.getElementById('prev-time-btn');
   const nextTimeBtn = document.getElementById('next-time-btn');
-  const minus12TimeBtn = document.getElementById('minus12-time-btn');
-  const plus12TimeBtn = document.getElementById('plus12-time-btn');
+  const minus6TimeBtn = document.getElementById('minus6-time-btn');
+  const plus6TimeBtn = document.getElementById('plus6-time-btn');
   const animateModelBtn = document.getElementById('animate-model-btn');
   const animationSpeedSelect = document.getElementById('animation-speed-select');
   const imageZoomToggle = document.getElementById('image-zoom-toggle');
@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { background: '#b01a9e', accent: '#b40eae' },
     { background: '#0e346d', accent: '#1d2992' }
   ];
-  const RUN_AGE_LIMITS_HOURS = [6, 12, 24];
+  const RUN_AGE_LIMITS_HOURS = [12, 18, 24];
 
   function getModelVariant(modelId) {
     const model = [...MODELS_CONFIG.peninsula, ...MODELS_CONFIG.europa].find(item => item.id === modelId);
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
       : cachedVerification || { state: 'unchecked' };
 
     const ageLabel = document.createElement('span');
-    ageLabel.textContent = `Salida calculada hace ${ageHours} h ${remainingMinutes} min`;
+    ageLabel.textContent = `Salida con los datos de hace ${ageHours} h ${remainingMinutes} min`;
     const freshnessLabel = document.createElement('span');
     freshnessLabel.className = `model-freshness-${verification.state}`;
     const preparingRunHour = verification.preparingRun?.slice(8, 10);
@@ -384,7 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
       compareMode === 'single' || getProductCode(model.id, productSelect.value) !== undefined
     );
 
-    // Con varios modelos manda el que menos horas de pronóstico tiene
     let limiting = null;
     displayed.forEach(model => {
       const runStr = getSelectedRun(model);
@@ -448,7 +447,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${model.id}:${getModelVariant(model.id) || ''}:${productKey}:${latestCandidate}`;
   }
 
-  // Devuelve 'ok', 'missing' (la imagen no existe) o 'error' (timeout: no se sabe)
   function probeImageOnce(url) {
     return new Promise(resolve => {
       const image = new Image();
@@ -522,7 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const hours = getValidForecastHours(model, productKey, runHourUtc, verificationMaxHour);
     if (!hours.length) return null;
 
-    // Primer plazo útil: el primero que no esté ya en el pasado (ahora + 1h)
     const firstUseful = hours.findIndex(hour => hour >= getRunElapsedHoursFloor(runStr) + 1);
     if (firstUseful === -1) return null;
     return hours.slice(firstUseful);
@@ -570,7 +567,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (firstResult === 'missing') continue;
 
-      // Ciclo a medio publicar: ¿sigue existiendo el anterior?
       const previousRun = candidates[index + 1];
       const previousHours = previousRun ? getVerificationHours(model, productKey, previousRun) : null;
       if (previousHours) {
@@ -713,7 +709,6 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function getProductCode(modelId, productKey) {
-    // La capa de nieve solo existe en la variante clásica (1,3 km) de AROME
     if (modelId === 'aromeIFS' && productKey === 'snow_depth' && getModelVariant(modelId) !== 'classic') return undefined;
     if ((modelId === 'ecmwf' || modelId === 'ecmwf_eu') && getModelVariant(modelId) === 'aifs') {
       return AIFS_PRODUCTS_MAP[modelId][productKey];
@@ -1118,7 +1113,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Se anima sobre la unión de plazos de todos los modelos, hasta donde llega el que menos alcance tiene
     const offsets = new Set();
     let limit = Infinity;
     displayed.forEach(model => {
@@ -1675,16 +1669,16 @@ document.addEventListener('DOMContentLoaded', () => {
     imagesDisplayContainer.addEventListener('mouseleave', resetImageZoom);
   }
 
-  if (minus12TimeBtn) {
-    minus12TimeBtn.addEventListener('click', () => {
+  if (minus6TimeBtn) {
+    minus6TimeBtn.addEventListener('click', () => {
       stopModelAnimation();
       offsetFromNow -= 6;
       updateImages();
     });
   }
 
-  if (plus12TimeBtn) {
-    plus12TimeBtn.addEventListener('click', () => {
+  if (plus6TimeBtn) {
+    plus6TimeBtn.addEventListener('click', () => {
       stopModelAnimation();
       offsetFromNow += 6;
       updateImages();
