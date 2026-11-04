@@ -514,6 +514,38 @@ async function fetchMetarData() {
   satMode.addEventListener('change', updateSatImage);
   satType.addEventListener('change', updateSatImage);
 
+  const imageZoomToggle = document.getElementById('image-zoom-toggle');
+  const satImageWrapper = document.querySelector('.sat-image-wrapper');
+  const IMAGE_ZOOM_FACTOR = 2.5;
+
+  function applyImageZoomState() {
+    const enabled = imageZoomToggle.checked;
+    satImageWrapper.classList.toggle('images-container--zoom', enabled);
+    if (!enabled) resetImageZoom();
+  }
+
+  function resetImageZoom() {
+    satImage.style.transform = '';
+  }
+
+  if (imageZoomToggle) {
+    imageZoomToggle.addEventListener('change', () => {
+      imageZoomToggle.blur();
+      applyImageZoomState();
+    });
+
+    satImageWrapper.addEventListener('mousemove', (event) => {
+      if (!imageZoomToggle.checked || event.target !== satImage) return;
+      const rect = satImage.parentElement.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * 100;
+      const y = ((event.clientY - rect.top) / rect.height) * 100;
+      satImage.style.transformOrigin = `${Math.min(100, Math.max(0, x))}% ${Math.min(100, Math.max(0, y))}%`;
+      satImage.style.transform = `scale(${IMAGE_ZOOM_FACTOR})`;
+    });
+
+    satImageWrapper.addEventListener('mouseleave', resetImageZoom);
+  }
+
   setDefaultSatType();
   updateSatImage();
 
@@ -827,6 +859,9 @@ async function fetchMetarData() {
     } else if (event.key === 'ArrowRight') {
       event.preventDefault();
       document.getElementById('radar-next-btn').click();
+    } else if (event.key.toLowerCase() === 'z' && imageZoomToggle) {
+      imageZoomToggle.checked = !imageZoomToggle.checked;
+      applyImageZoomState();
     }
   });
 
